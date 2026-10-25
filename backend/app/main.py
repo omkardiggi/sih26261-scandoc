@@ -168,7 +168,7 @@ def create_app() -> FastAPI:
 
     @app.get("/api/health")
     def health() -> dict:
-        return {"status": "ok", "version": __version__, "jobs_mode": s.jobs_mode}
+        return {"status": "ok", "version": __version__, "jobs_mode": s.jobs_mode, "private_mode": s.private_mode}
 
     _mount_frontend(app)
     return app

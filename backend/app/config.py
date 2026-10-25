@@ -90,6 +90,12 @@ class Settings(BaseSettings):
     smtp_from: str = ""
     smtp_starttls: bool = True
 
+    # Private mode: nothing leaves this server. Every outbound request is refused except to this machine / this network
+    # (e.g. a self-hosted model server) and, if allowed below, official government lookups (.gov.in / .nic.in pages that
+    # a document's QR code links to; only that address is requested, no document content is sent).
+    private_mode: bool = False
+    allow_official_lookups: bool = True
+
     # Outbound integration safety
     integration_timeout_seconds: float = 20.0
     workflow_timeout_seconds: float = 150.0  # multi-step vision workflows take ~30s per image
@@ -174,7 +180,7 @@ def _vercel_defaults() -> None:
         return
     hosts = [os.environ.get(k) for k in ("VERCEL_PROJECT_PRODUCTION_URL", "VERCEL_BRANCH_URL", "VERCEL_URL")]
     hosts = [h for h in dict.fromkeys(hosts) if h]
-    db = os.environ.get("DATABASE_URL") or os.environ.get("POSTGRES_URL") or os.environ.get("NEON_DATABASE_URL")
+    db = os.environ.get("DATABASE_URL") or os.environ.get("POSTGRES_URL")
     defaults = {
         "APP_ENV": "production",
         "STORAGE_BACKEND": "database",

@@ -73,7 +73,8 @@ def document_checks(db: Session, doc: Document) -> dict:
             next(iter((off.get("claims") or {}).values()), {}).get("reason"))
     ai = next((c for c in integ if c.check_type in ("ai_reading", "render_text_match") and c.status in ("pass", "warning")), None)
     if ai is not None:
-        add("ai_reading", "AI reading confirms the text", "pass" if ai.status == "pass" else "warn", ai.summary)
+        add("ai_reading", "AI reading confirms the text" if ai.check_type == "ai_reading" else "Second reading confirms the text",
+            "pass" if ai.status == "pass" else "warn", ai.summary)
     elif any((c.details or {}).get("pending") for c in integ):
         add("ai_reading", "AI reading confirms the text", "unknown", "AI analysis of the pages is still running; this updates automatically.")
     tam = [c for c in integ if c.dimension in ("tampering", "file_integrity") and (c.status == "fail" or (c.details or {}).get("significance") in ("high", "medium"))]

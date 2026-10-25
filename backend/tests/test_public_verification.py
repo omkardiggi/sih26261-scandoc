@@ -149,3 +149,25 @@ def test_tampering_indicators_only_count_on_key_values():
     assert _key_hits(2, [0.0, 0.77, 1.0, 1.0], [date], tight=True) == []  # a band across the page is not an edit
     assert _key_hits(2, [0.1, 0.5, 0.9, 0.55], [note]) == []  # not a key value
     assert _key_hits(3, [0.14, 0.78, 0.34, 0.83], [date]) == []  # other page
+
+
+def test_private_mode_blocks_outside_servers():
+    import pytest
+
+    from app.config import get_settings
+    from app.integrations import http
+
+    s = get_settings()
+    s.private_mode, s.allow_official_lookups = True, True
+    try:
+        with pytest.raises(http.OutboundBlocked, match="Private mode"):
+            http.validate_destination("https://serverless.roboflow.com/ws/workflows/wf")
+        with pytest.raises(http.OutboundBlocked, match="Private mode"):
+            http.validate_destination("https://generativelanguage.googleapis.com/v1/models")
+        assert http.validate_destination("http://localhost:9001/infer") == "http://localhost:9001/infer"  # own machine
+        assert http.validate_destination("https://approvalstatus.aicte.gov.in/x").startswith("https://")  # official lookup
+        s.allow_official_lookups = False
+        with pytest.raises(http.OutboundBlocked):
+            http.validate_destination("https://approvalstatus.aicte.gov.in/x")
+    finally:
+        s.private_mode, s.allow_official_lookups = False, True

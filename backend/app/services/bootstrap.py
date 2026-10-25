@@ -382,8 +382,8 @@ def _seed_analysis_workflow(db) -> None:
     from ..models import ModelConfig
 
     s = get_settings()
-    if not (s.roboflow_workspace and s.document_text_workflow and os.environ.get("ROBOFLOW_API_KEY")):
-        return
+    if s.private_mode or not (s.roboflow_workspace and s.document_text_workflow and os.environ.get("ROBOFLOW_API_KEY")):
+        return  # private mode never sets up an outside AI service
     integ = db.execute(select(Integration).where(Integration.adapter == "roboflow")).scalar_one_or_none()
     if integ is None:
         return

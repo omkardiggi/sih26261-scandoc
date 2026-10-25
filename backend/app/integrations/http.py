@@ -61,9 +61,28 @@ def _ip_forbidden(ip: str) -> bool:
     )
 
 
+OFFICIAL_SUFFIXES = (".gov.in", ".nic.in")
+
+
+def _resolves_to_own_network(host: str, port: int) -> bool:
+    try:
+        infos = socket.getaddrinfo(host, port, proto=socket.IPPROTO_TCP)
+    except socket.gaierror:
+        return False
+    return bool(infos) and all(_ip_forbidden(i[4][0]) for i in infos)
+
+
 def validate_destination(url: str) -> str:
     """Return the normalised URL or raise OutboundBlocked."""
     parts = urlsplit(url)
+    s = get_settings()
+    if s.private_mode and transport_override is None:
+        host = (parts.hostname or "").lower()
+        official = s.allow_official_lookups and host.endswith(OFFICIAL_SUFFIXES)
+        if not official:
+            if host and parts.scheme in ("http", "https") and _resolves_to_own_network(host, parts.port or 443):
+                return url  # a service on this machine or this organisation's own network
+            raise OutboundBlocked("Private mode: requests to outside servers are disabled on this installation.")
     if parts.scheme != "https":
         raise OutboundBlocked("Only HTTPS destinations are permitted.")
     if not parts.hostname:

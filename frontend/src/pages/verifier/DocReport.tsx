@@ -28,6 +28,43 @@ function located(p: any): string {
   return parts.length ? parts.join(", ") : "Text only";
 }
 
+const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
+
+// Document summary built on this server: detected document type, plus signatures, stamps and photographs located on each page.
+function LocalSummary({ x }: { x: any }) {
+  const ink = (x.integrity || []).find((c: any) => c.check_type === "ink_regions");
+  const regions: any[] = ink?.details?.regions || [];
+  const pagesWith = (kind: string) => [...new Set(regions.filter((r) => r.kind === kind).map((r) => r.page_no))].sort((a, b) => a - b);
+  const sig = pagesWith("signature");
+  const stamp = pagesWith("stamp");
+  const onPages = (p: number[]) => `Found on page${p.length > 1 ? "s" : ""} ${p.join(", ")}`;
+  const rows = x.pages.map((p: any) => {
+    const here = regions.filter((r) => r.page_no === p.page_no);
+    const n = (k: string) => here.filter((r) => r.kind === k).length;
+    const parts = [n("signature") && plural(n("signature"), "signature"), n("stamp") && plural(n("stamp"), "stamp"),
+      n("photo") && plural(n("photo"), "photograph"), n("emblem") && plural(n("emblem"), "logo")].filter(Boolean);
+    const text = p.unreadable ? "unreadable" : p.text_source === "ocr" ? "read by OCR" : p.text_source === "embedded" ? "digital text" : "no text";
+    return { page_no: p.page_no, found: parts.length ? parts.join(", ") : "No signature, stamp or photograph", text };
+  });
+  return (
+    <section className="card card-body">
+      <h2 className="rp-h">Document summary <span className="chip verified">{plural(x.pages.length, "page")} checked on this server</span></h2>
+      <div className="ai-sum">
+        <div><span className="muted">Looks like</span><strong>{x.document.category_label || "Not identified"}</strong></div>
+        <div><span className="muted">Signature</span><strong>{sig.length ? onPages(sig) : "Not seen"}</strong></div>
+        <div><span className="muted">Stamp / seal</span><strong>{stamp.length ? onPages(stamp) : "Not seen"}</strong></div>
+      </div>
+      <div className="ai-rows">{rows.map((r: any) => (
+        <div key={r.page_no} className="ai-row">
+          <span className="ai-pg">Page {r.page_no}</span>
+          <span className="grow">{r.found}</span>
+          <span className="muted small">{r.text}</span>
+        </div>
+      ))}</div>
+    </section>
+  );
+}
+
 function pageDefect(p: any): string | null {
   const fromPhotos = (p.photographs || []).flatMap((ph: any) => ph.possible_defects || []).find(isReal);
   const fromCondition = (p.condition || "").split("\n").find((l: string) => /^\d+\./.test(l));
@@ -238,6 +275,8 @@ export default function DocReport({ x, reload, autoReview }: { x: any; reload: (
           })}</div>
         </section>
       )}
+
+      {!vision && <LocalSummary x={x} />}
 
       <section className="stack" id="rp-pages">
         <div className="row between wrap">

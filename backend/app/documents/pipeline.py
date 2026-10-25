@@ -49,11 +49,28 @@ def _clear_partial_outputs(db, version_id: str) -> None:
         db.execute(delete(model).where(model.version_id == version_id))
 
 
+def _model_is_local(workflow_id: str) -> bool:
+    """True when the configured model server runs on this machine or network (allowed in private mode)."""
+    from urllib.parse import urlsplit
+
+    from ..integrations.http import _resolves_to_own_network
+    from ..models import Integration, ModelConfig
+
+    with session_scope() as db:
+        mc = db.execute(select(ModelConfig).where(ModelConfig.model_version == workflow_id)).scalar_one_or_none()
+        integ = db.get(Integration, mc.integration_id) if mc else None
+        base = (mc.endpoint_base if mc else None) or (integ.base_url if integ else "") or ""
+    p = urlsplit(base)
+    return bool(p.hostname) and _resolves_to_own_network(p.hostname, p.port or 443)
+
+
 def _text_reader():
     """Return reader(jpeg)->text backed by the configured text-recognition workflow, or None."""
     wf = get_settings().document_text_workflow
     if not wf:
         return None
+    if get_settings().private_mode and not _model_is_local(wf):
+        return None  # private mode: pages are re-read by the local OCR instead
     from ..integrations.roboflow import infer
     from ..integrations.vision_report import summarize
     from ..models import Integration, ModelConfig

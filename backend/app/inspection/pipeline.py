@@ -50,6 +50,14 @@ def applicable_models(db, media: MediaAsset, model_ids: list[str] | None = None)
             continue
         if m.facility_categories and media.facility_category and media.facility_category not in m.facility_categories:
             continue
+        if get_settings().private_mode:
+            from urllib.parse import urlsplit
+
+            from ..integrations.http import _resolves_to_own_network
+
+            p = urlsplit(m.endpoint_base or integ.base_url or "")
+            if not (p.hostname and _resolves_to_own_network(p.hostname, p.port or 443)):
+                continue  # private mode: only models served on this machine / network
         out.append(m)
     return out
 

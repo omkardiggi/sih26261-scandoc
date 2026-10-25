@@ -13,7 +13,4 @@ frontend/e2e
 vercel.env
 docs
 .env.local
-.agents
-.claude
-skills-lock.json
 deploy.log
