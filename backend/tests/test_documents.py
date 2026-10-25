@@ -320,3 +320,35 @@ def test_verification_report_pdf_has_summary_annotated_pages_and_appendix(office
     ri = c.get(f"/api/reports/institution/{inst['id']}/verification?download=true")
     assert ri.status_code == 200 and "attachment" in ri.headers["content-disposition"]
     assert "Document check summary" in "\n".join(p.get_text() for p in pymupdf.open("pdf", ri.content))
+
+
+def test_delete_restore_and_erase_document(officer_client):
+    c = officer_client
+    inst = create_institution(c, name="Synthetic Delete College")
+    keep = upload(c, inst["id"], synthetic_pdf(["SYNTHETIC DELETE COLLEGE", "Fire Safety Certificate"]), filename="keep.pdf").json()["document"]["id"]
+    gone = upload(c, inst["id"], synthetic_pdf(["SYNTHETIC DELETE COLLEGE", "Wrong upload"]), filename="wrong.pdf").json()["document"]["id"]
+    run_jobs()
+    listed = lambda: {d["id"] for d in c.get("/api/documents", params={"institution_id": inst["id"]}).json()["items"]}  # noqa: E731
+    assert listed() == {keep, gone}
+
+    assert c.post(f"/api/documents/{gone}/remove", json={"reason": "uploaded by mistake"}).status_code == 200
+    assert listed() == {keep}  # hidden from every list
+    assert c.get(f"/api/documents/{gone}").status_code == 404
+    assert [d["id"] for d in c.get(f"/api/institutions/{inst['id']}/removed-documents").json()["items"]] == [gone]
+    summary_ids = {r["id"] for r in c.get(f"/api/institutions/{inst['id']}/document-summary").json()["matrix"]}
+    assert gone not in summary_ids
+
+    assert c.post(f"/api/documents/{gone}/restore").status_code == 200
+    assert listed() == {keep}  | {gone}
+    assert c.delete(f"/api/documents/{gone}").status_code == 409  # must be deleted before it can be erased
+
+    c.post(f"/api/documents/{gone}/remove", json={"reason": "uploaded by mistake"})
+    assert c.delete(f"/api/documents/{gone}").status_code == 200
+    assert c.get(f"/api/institutions/{inst['id']}/removed-documents").json()["items"] == []
+    events = c.get("/api/audit", params={"entity_id": gone}).json()["items"]
+    assert {"document.removed", "document.restored", "document.erased"} <= {e["action"] for e in events}
+
+    # a document with an officer decision is kept as a record
+    c.post(f"/api/documents/{keep}/review", json={"outcome": "accepted_after_review", "reason": "Checked against the original."})
+    c.post(f"/api/documents/{keep}/remove", json={"reason": "test"})
+    assert c.delete(f"/api/documents/{keep}").status_code == 409

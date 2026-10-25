@@ -4,6 +4,7 @@ import { CheckCircle2, Plus, Search } from "lucide-react";
 import { api, qs, useApi } from "../../api";
 import { CASE_STATUS, CONN, DOC_STATUS, human, StatusBadge } from "../../labels";
 import { Badge, Banner, Button, Card, Empty, ErrorState, Field, fmtDate, Modal, PageHead, Pagination, Spinner, Tabs, useDebounced, useToast } from "../../ui";
+import { DeleteDocButton } from "../../components/RemoveDocument";
 
 const TABS = [["cases", "Verification cases"], ["documents", "Documents"], ["requirements", "Requirements"], ["sources", "Official sources"], ["categories", "Document categories"]];
 
@@ -126,11 +127,12 @@ function DocumentsQueue() {
       {!list.data ? <Spinner /> : list.data.total === 0 ? <Card><Empty title="No documents match">Documents are uploaded from a verification case or an institution profile.</Empty></Card> : (
         <>
           <div className="table-wrap"><table className="table">
-            <thead><tr><th>Document</th><th>Institution</th><th>Category</th><th>Status</th><th>Review</th><th>Uploaded</th></tr></thead>
+            <thead><tr><th>Document</th><th>Institution</th><th>Category</th><th>Status</th><th>Review</th><th>Uploaded</th><th /></tr></thead>
             <tbody>{list.data.items.map((d: any) => (
               <tr key={d.id} className="clickable" onClick={() => nav(`/app/verifier/documents/${d.id}`)}>
                 <td style={{ fontWeight: 550 }}>{d.title}</td><td className="small">{d.institution_name}</td><td className="small">{d.category_label || "Unclassified"}</td>
                 <td><StatusBadge map={DOC_STATUS} value={d.status} /></td><td>{d.review_status === "reviewed" ? <Badge tone="ok">Reviewed</Badge> : <Badge>Unreviewed</Badge>}</td><td className="small">{fmtDate(d.created_at)}</td>
+                <td><DeleteDocButton doc={{ id: d.id, title: d.title }} onDone={() => list.reload()} /></td>
               </tr>
             ))}</tbody>
           </table></div>

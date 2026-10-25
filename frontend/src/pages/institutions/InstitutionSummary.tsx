@@ -144,7 +144,7 @@ export default function InstitutionSummary({ inst }: { inst: any }) {
                     <td><span className={`chip ${r.status}`}>{r.label}</span>
                       {(r.status === "problem" || r.status === "review") && <div><button className="btn-review sm" style={{ marginTop: 6 }} onClick={(e) => { e.stopPropagation(); nav(`/app/verifier/documents/${r.id}?review=1`); }}>Review</button></div>}</td>
                     {d.columns.map((col: any) => { const [g, cls] = CELL[r.cells[col.key]] || CELL.na; return <td key={col.key} className="mc"><span className={`cell ${cls}`}>{g}</span></td>; })}
-                    <td><button className="row-trash" title="Remove document" aria-label={`Remove ${r.title}`} onClick={(e) => { e.stopPropagation(); setRemoving({ id: r.id, title: r.title }); }}><Trash2 size={15} /></button></td>
+                    <td><button className="row-trash" title="Delete document" aria-label={`Delete ${r.title}`} onClick={(e) => { e.stopPropagation(); setRemoving({ id: r.id, title: r.title }); }}><Trash2 size={15} /></button></td>
                   </tr>
                 ))}</tbody>
               </table>
@@ -157,11 +157,18 @@ export default function InstitutionSummary({ inst }: { inst: any }) {
       <RemoveDocument doc={removing} onClose={() => setRemoving(null)} onDone={() => { setRemoving(null); s.reload(); removed.reload(); }} />
       {removed.data?.items?.length > 0 && (
         <details className="card card-body small">
-          <summary style={{ cursor: "pointer" }}>Removed documents ({removed.data.items.length})</summary>
+          <summary style={{ cursor: "pointer" }}>Deleted documents ({removed.data.items.length})</summary>
           <div className="stack sm" style={{ marginTop: 8 }}>{removed.data.items.map((r: any) => (
             <div key={r.id} className="row between" style={{ gap: 12 }}>
               <span className="break"><strong>{r.title}</strong> <span className="muted">· {r.reason} · {fmtDate(r.removed_at, true)}</span></span>
-              <Button size="sm" onClick={async () => { await api(`/api/documents/${r.id}/restore`, { method: "POST" }); s.reload(); removed.reload(); }}>Restore</Button>
+              <span className="row" style={{ gap: 6 }}>
+                <Button size="sm" onClick={async () => { await api(`/api/documents/${r.id}/restore`, { method: "POST" }); s.reload(); removed.reload(); }}>Restore</Button>
+                <Button size="sm" className="danger-ghost" onClick={async () => {
+                  if (!window.confirm(`Erase "${r.title}" permanently? Its files and extracted data are deleted and cannot be recovered.`)) return;
+                  try { await api(`/api/documents/${r.id}`, { method: "DELETE" }); toast("Document erased permanently."); removed.reload(); }
+                  catch (e: any) { toast(e.message, "error"); }
+                }}>Delete permanently</Button>
+              </span>
             </div>
           ))}</div>
         </details>

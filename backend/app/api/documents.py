@@ -395,6 +395,79 @@ def restore_document(doc_id: str, auth: Auth = Depends(require_officer), db: Ses
     return {"ok": True}
 
 
+@router.delete("/documents/{doc_id}")
+def delete_document_permanently(doc_id: str, auth: Auth = Depends(require_officer), db: Session = Depends(get_db)) -> dict:
+    """Erase a deleted (removed) document completely: its files and all extracted data. Not allowed once an officer
+    decision has been recorded on it, because decisions are kept as records. The audit trail keeps a note of the erasure."""
+    from sqlalchemy import delete as sql_delete
+    from sqlalchemy import update as sql_update
+
+    from ..models import (
+        CheckRun,
+        ComparisonResult,
+        CorrectiveAction,
+        Decision,
+        DocumentPage,
+        EvidenceArtifact,
+        ExternalVerificationAttempt,
+        ExtractedField,
+        ExtractedTable,
+        FieldCorrection,
+        Finding,
+        InstitutionRecord,
+        IntegrityCheck,
+        Program,
+        TextBlock,
+        ValidationResult,
+    )
+
+    doc = db.execute(select(Document).where(Document.id == doc_id).execution_options(include_removed=True)).scalar_one_or_none()
+    if doc is None:
+        raise HTTPException(404, "Document not found.")
+    if doc.status != "removed":
+        raise HTTPException(409, "Delete the document first; it can then be erased permanently from the deleted documents list.")
+    if db.execute(select(Decision.id).where(Decision.document_id == doc.id)).first():
+        raise HTTPException(409, "An officer decision is recorded on this document, so it is kept as a record and cannot be erased.")
+    versions = db.execute(select(DocumentVersion).where(DocumentVersion.document_id == doc.id)).scalars().all()
+    vids = [v.id for v in versions]
+    keys = [k for v in versions for k in (v.storage_key, v.processing_key) if k]
+    keys += [p.render_key for p in db.execute(select(DocumentPage).where(DocumentPage.version_id.in_(vids))).scalars() if p.render_key]
+    keys += [a.storage_key for a in db.execute(select(EvidenceArtifact).where(EvidenceArtifact.version_id.in_(vids))).scalars() if a.storage_key]
+    fids = select(ExtractedField.id).where(ExtractedField.document_id == doc.id)
+    runs = select(CheckRun.id).where(CheckRun.version_id.in_(vids))
+    findings = select(Finding.id).where(Finding.document_id == doc.id)
+    audit.record(db, "document.erased", officer=auth.officer, entity_type="document", entity_id=doc.id, institution_id=doc.institution_id,
+                 case_id=doc.case_id, summary=f"Permanently erased '{doc.title}' and its {len(versions)} version(s)",
+                 before={"title": doc.title, "versions": [{"file": v.original_filename, "sha256": v.sha256} for v in versions]}, ctx=auth.ctx)
+    db.execute(sql_update(Program).where(Program.source_document_id == doc.id).values(source_document_id=None))
+    db.execute(sql_update(InstitutionRecord).where(InstitutionRecord.source_document_id == doc.id).values(source_document_id=None))
+    db.execute(sql_update(CorrectiveAction).where(CorrectiveAction.evidence_document_id == doc.id).values(evidence_document_id=None))
+    db.execute(sql_update(CorrectiveAction).where(CorrectiveAction.finding_id.in_(findings)).values(finding_id=None))
+    db.execute(sql_delete(Finding).where(Finding.document_id == doc.id))
+    db.execute(sql_delete(ExternalVerificationAttempt).where(or_(ExternalVerificationAttempt.document_id == doc.id,
+                                                                 ExternalVerificationAttempt.field_id.in_(fids))))
+    db.execute(sql_delete(FieldCorrection).where(FieldCorrection.field_id.in_(fids)))
+    db.execute(sql_delete(ValidationResult).where(or_(ValidationResult.document_id == doc.id, ValidationResult.version_id.in_(vids))))
+    db.execute(sql_delete(IntegrityCheck).where(IntegrityCheck.version_id.in_(vids)))
+    db.execute(sql_delete(ComparisonResult).where(ComparisonResult.run_id.in_(runs)))
+    db.execute(sql_delete(CheckRun).where(CheckRun.version_id.in_(vids)))
+    for model in (TextBlock, ExtractedTable, DocumentPage, EvidenceArtifact):
+        db.execute(sql_delete(model).where(model.version_id.in_(vids)))
+    db.execute(sql_delete(ExtractedField).where(ExtractedField.document_id == doc.id))
+    doc.current_version_id = None
+    db.flush()
+    db.execute(sql_update(DocumentVersion).where(DocumentVersion.duplicate_of_version_id.in_(vids)).values(duplicate_of_version_id=None))
+    db.execute(sql_delete(DocumentVersion).where(DocumentVersion.document_id == doc.id))
+    db.delete(doc)
+    db.commit()
+    for k in keys:
+        try:
+            storage.delete(k)
+        except Exception:  # noqa: BLE001 - the record is gone; a leftover encrypted blob is unreadable without it
+            pass
+    return {"ok": True}
+
+
 class CorrectionIn(BaseModel):
     value: str = Field(min_length=1, max_length=4000)
     reason: str = Field(min_length=3, max_length=2000)

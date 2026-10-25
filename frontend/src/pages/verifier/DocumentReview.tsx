@@ -42,7 +42,7 @@ export default function DocumentReview() {
         actions={<><StatusBadge map={DOC_STATUS} value={x.document.status} />
           <Button icon={<Download size={15} />} onClick={() => download(x.download_url).catch((e) => toast(e.message, "error"))}>Original</Button>
           <Button icon={<Upload size={15} />} onClick={() => setNewVersion(true)}>New version</Button>
-          <Button className="danger-ghost" icon={<Trash2 size={15} />} onClick={() => setRemoving(true)}>Remove</Button></>} />
+          <Button className="danger-ghost" icon={<Trash2 size={15} />} onClick={() => setRemoving(true)}>Delete</Button></>} />
       <RemoveDocument doc={removing ? { id: x.document.id, title: x.document.title } : null} onClose={() => setRemoving(false)}
         onDone={() => nav(`/app/institutions/${x.institution.id}`)} />
       {processing && (

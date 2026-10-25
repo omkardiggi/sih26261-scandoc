@@ -5,6 +5,7 @@ import { api, download, idempotencyKey, useApi, usePoll } from "../../api";
 import { CASE_STATUS, CHECK_STATUS, DIMENSIONS, DOC_STATUS, human, OUTCOME, SEVERITY, StatusBadge } from "../../labels";
 import { Badge, Banner, Button, Card, Empty, ErrorState, Field, fmtDate, KV, PageHead, Spinner, Tabs, useToast } from "../../ui";
 import DocumentUpload from "../../components/DocumentUpload";
+import { DeleteDocButton } from "../../components/RemoveDocument";
 
 export default function CaseDetail() {
   const { id } = useParams();
@@ -34,13 +35,14 @@ export default function CaseDetail() {
           <Card title="Documents in this case">
             {k.documents.length === 0 ? <Empty title="No documents yet" action={<Button variant="primary" onClick={() => setUpload(true)}>Upload documents</Button>}>Upload the documents submitted for this application.</Empty> : (
               <div className="table-wrap"><table className="table">
-                <thead><tr><th>Document</th><th>Category</th><th>Status</th><th>Official records</th><th>Review</th></tr></thead>
+                <thead><tr><th>Document</th><th>Category</th><th>Status</th><th>Official records</th><th>Review</th><th /></tr></thead>
                 <tbody>{k.documents.map((d: any) => (
                   <tr key={d.id} className="clickable" onClick={() => nav(`/app/verifier/documents/${d.id}`)}>
                     <td style={{ fontWeight: 550 }}>{d.title}</td><td className="small">{human(d.category_key) || "Unclassified"}</td>
                     <td><StatusBadge map={DOC_STATUS} value={d.status} /></td>
                     <td className="small">{human(d.check_summary?.official?.status || "not_attempted")}</td>
                     <td>{d.review_status === "reviewed" ? <Badge tone="ok">Reviewed</Badge> : <Badge>Unreviewed</Badge>}</td>
+                    <td><DeleteDocButton doc={{ id: d.id, title: d.title }} onDone={() => c.reload()} /></td>
                   </tr>
                 ))}</tbody>
               </table></div>

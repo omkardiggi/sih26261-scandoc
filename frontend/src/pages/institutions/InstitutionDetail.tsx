@@ -5,6 +5,7 @@ import { api, qs, useApi } from "../../api";
 import { CASE_STATUS, DOC_STATUS, human, SEVERITY, StatusBadge } from "../../labels";
 import { Badge, Banner, Button, Card, Empty, ErrorState, Field, fmtDate, KV, Modal, PageHead, Pagination, Spinner, Tabs, useToast } from "../../ui";
 import DocumentUpload from "../../components/DocumentUpload";
+import { DeleteDocButton } from "../../components/RemoveDocument";
 import InstitutionForm from "./InstitutionForm";
 import InstitutionSummary from "./InstitutionSummary";
 
@@ -93,7 +94,7 @@ function Documents({ inst }: { inst: any }) {
       {!docs.data ? <Spinner /> : docs.data.total === 0 ? <Empty title="No documents uploaded">Upload approval letters, certificates and other records to start verification.</Empty> : (
         <>
           <div className="table-wrap"><table className="table">
-            <thead><tr><th>Document</th><th>Category</th><th>Year</th><th>Version · SHA-256</th><th>Status</th><th>Review</th><th>Uploaded</th></tr></thead>
+            <thead><tr><th>Document</th><th>Category</th><th>Year</th><th>Version · SHA-256</th><th>Status</th><th>Review</th><th>Uploaded</th><th /></tr></thead>
             <tbody>{docs.data.items.map((d: any) => (
               <tr key={d.id} className="clickable" onClick={() => nav(`/app/verifier/documents/${d.id}`)}>
                 <td><div style={{ fontWeight: 550 }}>{d.title}</div>{d.issuing_authority && <div className="muted tiny">{d.issuing_authority}</div>}{d.is_historical && <Badge tone="outline">Historical</Badge>}</td>
@@ -103,6 +104,7 @@ function Documents({ inst }: { inst: any }) {
                 <td><StatusBadge map={DOC_STATUS} value={d.status} /></td>
                 <td>{d.review_status === "reviewed" ? <Badge tone="ok">Reviewed</Badge> : <Badge>Unreviewed</Badge>}</td>
                 <td className="small">{fmtDate(d.created_at)}</td>
+                <td><DeleteDocButton doc={{ id: d.id, title: d.title }} onDone={() => docs.reload()} /></td>
               </tr>
             ))}</tbody>
           </table></div>
