@@ -96,6 +96,10 @@ class Settings(BaseSettings):
     private_mode: bool = False
     allow_official_lookups: bool = True
 
+    # Photo defect flags from the general image model are unreliable (it mistakes hose reels for loose wiring), so by
+    # default only an officer-trained model (data/models/photo_model.onnx) reports defects.
+    photo_general_defects: bool = False
+
     # Outbound integration safety
     integration_timeout_seconds: float = 20.0
     workflow_timeout_seconds: float = 150.0  # multi-step vision workflows take ~30s per image

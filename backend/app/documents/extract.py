@@ -166,6 +166,22 @@ def _pdf_tables(data: bytes, password: str | None, pages_with_text: set[int]) ->
     return results
 
 
+def _overlap(a: list[float], b: list[float]) -> float:
+    """Share of box ``a`` covered by box ``b`` (normalised coordinates)."""
+    w = min(a[2], b[2]) - max(a[0], b[0])
+    h = min(a[3], b[3]) - max(a[1], b[1])
+    area = max((a[2] - a[0]) * (a[3] - a[1]), 1e-9)
+    return max(0.0, w) * max(0.0, h) / area
+
+
+def _scan_with_sparse_text(page, lines: list[Line]) -> bool:
+    """True when the page is a full-page scan whose digital text covers only a small part of it."""
+    W, H = page.rect.width or 1, page.rect.height or 1
+    scanned = any(r.width * r.height / (W * H) >= 0.6 for img in page.get_images(full=True) for r in page.get_image_rects(img[0]))
+    covered = sum((ln.bbox[2] - ln.bbox[0]) * (ln.bbox[3] - ln.bbox[1]) for ln in lines if ln.bbox)
+    return scanned and covered < 0.08
+
+
 def extract_pdf(data: bytes, password: str | None = None, progress=None) -> ExtractionResult:
     import pymupdf
 
@@ -191,8 +207,18 @@ def extract_pdf(data: bytes, password: str | None = None, progress=None) -> Extr
             analysis = None
             source = "embedded"
             ocr_conf = None
-            if chars >= MIN_EMBEDDED_CHARS:
+            if chars >= MIN_EMBEDDED_CHARS and not (not blank and _scan_with_sparse_text(page, lines)):
                 embedded_pages += 1
+            elif chars >= MIN_EMBEDDED_CHARS:
+                # A scanned page carrying a little digital text (e.g. a digital-signature stamp): read the scan as well.
+                analysis_img = _render(page, s.ocr_render_dpi)
+                analysis = np.asarray(analysis_img)
+                ocr_lines, ocr_conf = _ocr_page(analysis, page_no, seq_start=len(lines))
+                lines = lines + [ln for ln in ocr_lines if not any(_overlap(ln.bbox, e.bbox) > 0.5 for e in lines)]
+                chars = sum(len(ln.text) for ln in lines)
+                source = "ocr"
+                if ocr_conf is not None:
+                    ocr_confs.append(ocr_conf)
             elif not blank:
                 analysis_img = _render(page, s.ocr_render_dpi)
                 analysis = np.asarray(analysis_img)

@@ -7,7 +7,9 @@ import { human } from "../../labels";
 type Mark = { n: number; label: string; value: string; page_no: number; boxes: number[][]; tone: string };
 const TONE_WORD: Record<string, string> = { valid: "Matches", invalid: "Does not match", warning: "Check", neutral: "Read", qr: "QR code", tamper: "Suspicious", vision: "AI detected", defect: "Possible defect",
   sign: "Signature", stamp: "Stamp / seal", photo: "Photograph", emblem: "Logo" };
-const MARK_TONE: Record<string, string> = { signature: "sign", stamp: "stamp", photo: "photo", emblem: "emblem" };
+const MARK_TONE: Record<string, string> = { signature: "sign", handwriting: "sign", stamp: "stamp", photo: "photo", photo_defect: "defect", emblem: "emblem" };
+const MARK_VALUE: Record<string, string> = { signature: "Located on the page - compare with the specimen", handwriting: "Handwritten text or initials - check it is authorised",
+  stamp: "Seal impression located on the page", photo: "Photograph in the document", photo_defect: "Photograph with a possible defect", emblem: "Printed logo" };
 const KIND_WORD: Record<string, string> = { image_region: "Image, emblem or photograph on the page", object: "Object in a photograph", evidence: "Visual evidence", defect: "Possible visible defect" };
 const STATE_ICON: Record<string, string> = { pass: "✓", fail: "✕", warn: "!", unknown: "?" };
 
@@ -41,8 +43,12 @@ function LocalSummary({ x }: { x: any }) {
   const rows = x.pages.map((p: any) => {
     const here = regions.filter((r) => r.page_no === p.page_no);
     const n = (k: string) => here.filter((r) => r.kind === k).length;
-    const parts = [n("signature") && plural(n("signature"), "signature"), n("stamp") && plural(n("stamp"), "stamp"),
-      n("photo") && plural(n("photo"), "photograph"), n("emblem") && plural(n("emblem"), "logo")].filter(Boolean);
+    const photoNames = [...new Set(here.filter((r) => r.kind === "photo" && r.photo).map((r) => r.photo.class))];
+    const defects = here.filter((r) => r.photo?.defects?.length).map((r) => r.photo.defects[0].name);
+    const parts = [n("signature") && plural(n("signature"), "signature"), n("handwriting") && plural(n("handwriting"), "handwritten entry", "handwritten entries"),
+      n("stamp") && plural(n("stamp"), "stamp"),
+      n("photo") && `${plural(n("photo"), "photograph")}${photoNames.length ? ` (${photoNames.join(", ")})` : ""}`,
+      n("emblem") && plural(n("emblem"), "logo"), defects.length && `possible defect: ${defects.join(", ")}`].filter(Boolean);
     const text = p.unreadable ? "unreadable" : p.text_source === "ocr" ? "read by OCR" : p.text_source === "embedded" ? "digital text" : "no text";
     return { page_no: p.page_no, found: parts.length ? parts.join(", ") : "No signature, stamp or photograph", text };
   });
@@ -105,7 +111,7 @@ export function buildReportMarks(x: any): Mark[] {
     for (const e of c.evidence || []) {
       if (!e.bbox || !e.page_no) continue;
       if (c.check_type === "qr_barcode") out.push({ n: 0, label: "QR code", value: "Links to the issuer's record", page_no: e.page_no, boxes: [e.bbox], tone: "qr" });
-      else if (c.check_type === "ink_regions" && MARK_TONE[e.kind]) out.push({ n: 0, label: e.note, value: e.kind === "signature" ? "Located on the page — compare with the specimen" : e.kind === "stamp" ? "Seal impression located on the page" : e.kind === "photo" ? "Photograph in the document" : "Printed logo", page_no: e.page_no, boxes: [e.bbox], tone: MARK_TONE[e.kind] });
+      else if (c.check_type === "ink_regions" && MARK_TONE[e.kind]) out.push({ n: 0, label: e.note, value: e.detail || MARK_VALUE[e.kind], page_no: e.page_no, boxes: [e.bbox], tone: MARK_TONE[e.kind] });
       else if (c.check_type === "ai_visual_analysis" && e.kind === "image_region") continue; // photographs are already marked
       else if (c.check_type === "ai_visual_analysis") out.push({ n: 0, label: e.note || "AI detection", value: KIND_WORD[e.kind] || "Located by the AI analysis", page_no: e.page_no, boxes: [e.bbox], tone: e.kind === "defect" ? "defect" : "vision" });
       else if (c.dimension === "tampering" && (c.status === "fail" || sig === "high" || sig === "medium")) out.push({ n: 0, label: "Tampering indicator", value: c.title, page_no: e.page_no, boxes: [e.bbox], tone: "tamper" });

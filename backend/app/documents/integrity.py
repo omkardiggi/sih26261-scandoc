@@ -664,7 +664,8 @@ def check_image_forensics(data: bytes, detected_type: str, ex: ExtractionResult,
     return checks
 
 
-MARK_LABEL = {"stamp": "Stamp / seal", "signature": "Signature", "photo": "Photograph", "emblem": "Logo / emblem", "ink": "Ink mark"}
+MARK_LABEL = {"stamp": "Stamp / seal", "signature": "Signature", "handwriting": "Handwritten entry", "photo": "Photograph",
+              "emblem": "Logo / emblem", "ink": "Ink mark"}
 
 
 def _photo_regions(arr: np.ndarray, text_mask: np.ndarray, block: int = 24) -> list[tuple[int, int, int, int]]:
@@ -695,6 +696,31 @@ def _photo_regions(arr: np.ndarray, text_mask: np.ndarray, block: int = 24) -> l
     return out
 
 
+def _split_photo(arr: np.ndarray, box: tuple[int, int, int, int]) -> list[tuple[int, int, int, int]]:
+    """Split a block of several photographs (a grid with paper gutters between them) into the individual photos."""
+    x, y, w, h = box
+    gray = cv2.cvtColor(arr[y:y + h, x:x + w], cv2.COLOR_RGB2GRAY)
+    busy = gray < 235
+
+    def runs(profile: np.ndarray, length: int) -> list[tuple[int, int]]:
+        on = profile > 0.08
+        out, start = [], None
+        for i, v in enumerate(list(on) + [False]):
+            if v and start is None:
+                start = i
+            elif not v and start is not None:
+                if i - start >= 0.12 * length:
+                    out.append((start, i))
+                start = None
+        return out
+
+    pieces = []
+    for r0, r1 in runs(busy.mean(axis=1), h) or [(0, h)]:
+        for c0, c1 in runs(busy[r0:r1].mean(axis=0), w) or [(0, w)]:
+            pieces.append((x + c0, y + r0, c1 - c0, r1 - r0))
+    return pieces if len(pieces) > 1 else [box]
+
+
 def _stroke_shape(strokes: np.ndarray) -> tuple[float, int, float]:
     """(longest stroke width relative to the region, number of strokes, variation of stroke heights) of a binary region.
 
@@ -722,6 +748,8 @@ def _detect_marks(arr: np.ndarray, text_boxes: list[list[float]], digital: bool)
     for x0, y0, x1, y1 in text_boxes:
         text_mask[max(0, int(y0 * H)):int(y1 * H) + 1, max(0, int(x0 * W)):int(x1 * W) + 1] = True
     gray = cv2.cvtColor(arr, cv2.COLOR_RGB2GRAY)
+    black_print = (gray < 110) & (sat < 60)
+    line_h = float(np.median([(b[3] - b[1]) * H for b in text_boxes])) if text_boxes else 0.02 * H
     photos = _photo_regions(arr, text_mask)
     in_photo = np.zeros((H, W), bool)
     for x, y, w, h in photos:
@@ -736,10 +764,24 @@ def _detect_marks(arr: np.ndarray, text_boxes: list[list[float]], digital: bool)
                     return True
         return False
 
+    def inline_with_print(x, y, w, h) -> bool:
+        """Short handwriting on the same row as printed text: an order number, a date, initials in a table cell."""
+        if h > 2.2 * line_h:
+            return False
+        for x0, y0, x1, y1 in text_boxes:
+            bx0, by0, bx1, by1 = x0 * W, y0 * H, x1 * W, y1 * H
+            vertical = min(y + h, by1) - max(y, by0)
+            gap = max(bx0 - (x + w), x - bx1, 0)
+            if vertical >= 0.5 * min(h, by1 - by0) and gap < 0.15 * W and not (bx0 >= x and bx1 <= x + w):
+                return True
+        return False
+
     def add(kind, x, y, w, h, colour=None):
+        if kind == "signature" and inline_with_print(x, y, w, h):
+            kind = "handwriting"
         if kind != "photo" and in_photo[y:y + h, x:x + w].mean() > 0.3:
             return  # objects inside a photograph are not stamps or signatures
-        if kind in ("signature", "stamp") and (overlaps("signature", x, y, w, h) or overlaps("stamp", x, y, w, h)):
+        if kind in ("signature", "handwriting", "stamp") and any(overlaps(k, x, y, w, h) for k in ("signature", "handwriting", "stamp")):
             return
         out.append({"kind": kind, "bbox": [round(x / W, 4), round(y / H, 4), round((x + w) / W, 4), round((y + h) / H, 4)], "colour": colour})
 
@@ -761,6 +803,13 @@ def _detect_marks(arr: np.ndarray, text_boxes: list[list[float]], digital: bool)
         colour = "red" if hh <= 8 or hh >= 170 else ("green" if hh < 80 else ("cyan" if hh < 100 else "blue/violet"))
         if fill > 0.55:
             continue  # solid coloured block: highlight or filled graphic
+        ink_px = int(ink.sum())
+        if ink_px < 120 or ink_px < 0.5 * int(black_print[y:y + h, x:x + w].sum()):
+            continue  # colour speckle around black print (scanner noise), not ink
+        bars = int(cv2.morphologyEx(ink.astype(np.uint8), cv2.MORPH_OPEN, np.ones((1, max(8, w // 4)), np.uint8)).sum())
+        if bars >= 0.6 * ink_px:
+            continue  # coloured rules, banners and menu bars
+        solid = int(cv2.erode(ink.astype(np.uint8), np.ones((5, 5), np.uint8)).sum()) / ink_px
         if pieces >= 4 and hvar < 0.4:
             continue  # letters of even height: coloured printed text
         if pieces <= 6 and text_mask[y:y + h, x:x + w].mean() >= 0.5:
@@ -770,8 +819,8 @@ def _detect_marks(arr: np.ndarray, text_boxes: list[list[float]], digital: bool)
             add("emblem", x, y, w, h, colour)  # a few heavy shapes: printed logo
         elif compact and (pieces >= 10 or fill >= 0.2):
             add("emblem" if digital and y < 0.15 * H else "stamp", x, y, w, h, colour)  # ring/border with small lettering
-        elif 0.05 * W <= w <= 0.6 * W:
-            add("signature", x, y, w, h, colour)
+        elif 0.05 * W <= w <= 0.6 * W and solid < 0.25:
+            add("signature", x, y, w, h, colour)  # thin pen strokes (solid blocks are UI or print, not ink)
 
     # 2) dark pen strokes (black / blue-black signatures)
     dark = ((gray < 120) & ~coloured).astype(np.uint8) * 255
@@ -795,11 +844,39 @@ def _detect_marks(arr: np.ndarray, text_boxes: list[list[float]], digital: bool)
         if text_mask[y:y + h, x:x + w].mean() > 0.6 and pieces > 12:
             continue  # a printed line the text reader read
         add("signature", x, y, w, h, "dark")
-    for x, y, w, h in photos:
-        add("photo", x, y, w, h)
-    order = {"stamp": 0, "signature": 1, "photo": 2, "emblem": 3, "ink": 4}
+    for x, y, w, h in [b for p in photos for b in _split_photo(arr, p)]:
+        if w * h >= 0.004 * W * H:
+            add("photo", x, y, w, h)
+    order = {"stamp": 0, "signature": 1, "handwriting": 2, "photo": 3, "emblem": 4, "ink": 5}
     out.sort(key=lambda o: (order[o["kind"]], o["bbox"][1]))
     return [o for kind in order for o in [x for x in out if x["kind"] == kind][:8]]
+
+
+def _recognise_photo(arr: np.ndarray, bbox: list[float]) -> dict | None:
+    """Class name and possible defects of a photograph on the page (model runs on this server)."""
+    from . import photo_ai
+
+    H, W = arr.shape[:2]
+    x0, y0, x1, y1 = int(bbox[0] * W), int(bbox[1] * H), int(bbox[2] * W), int(bbox[3] * H)
+    try:
+        return photo_ai.analyse(arr[y0:y1, x0:x1])
+    except Exception as exc:  # noqa: BLE001 - recognition is optional
+        log.warning("photo recognition failed: %s", type(exc).__name__)
+        return None
+
+
+def _photo_note(f: dict) -> tuple[str, str | None, str]:
+    """(label, detail, kind) for a photograph mark."""
+    r = f.get("photo")
+    if not r:
+        return "Photograph", None, "photo"
+    sure = r["score"] >= 0.5
+    label = f"Photograph: {r['class']}" + ("" if sure else " (uncertain)")
+    detail = f"{r['class']} {round(r['score'] * 100)}%" + ("" if sure else f"; also possible: {r['top'][1][0]}")
+    if r["defects"]:
+        d = r["defects"][0]
+        return label, f"Possible defect: {d['name']} ({round(d['score'] * 100)}%), verify on site. {detail}", "photo_defect"
+    return label, detail, "photo"
 
 
 def check_ink_regions(ex: ExtractionResult) -> Check:
@@ -814,6 +891,8 @@ def check_ink_regions(ex: ExtractionResult) -> Check:
             continue
         boxes = [ln.bbox for ln in p.lines if ln.bbox and len(ln.text.strip()) >= 2]
         for m in _detect_marks(arr, boxes, digital=p.text_source == "embedded"):
+            if m["kind"] == "photo":
+                m["photo"] = _recognise_photo(arr, m["bbox"])
             found.append({"page_no": p.page_no, **m})
     count = {k: sum(f["kind"] == k for f in found) for k in MARK_LABEL}
     if not any(count[k] for k in ("stamp", "signature")):
@@ -824,10 +903,21 @@ def check_ink_regions(ex: ExtractionResult) -> Check:
         pages = sorted({f["page_no"] for f in found if f["kind"] in ("stamp", "signature")})
         summary = (f"Located {count['stamp']} stamp/seal(s) and {count['signature']} signature(s) on page(s) "
                    f"{', '.join(map(str, pages))}. Their presence does not prove authenticity; compare with the issuer's specimen.")
-    return Check("ink_regions", "visual_elements", "info", "Signatures and stamps", summary,
-                 {"regions": found[:60], "counts": count},
-                 [{"type": "page", "page_no": f["page_no"], "bbox": f["bbox"], "kind": f["kind"],
-                   "note": MARK_LABEL[f["kind"]] + (f" ({f['colour']} ink)" if f.get("colour") and f["colour"] != "dark" else "")} for f in found[:60]])
+    photos = [f for f in found if f.get("photo")]
+    if photos:
+        summary += " Photographs: " + ", ".join(sorted({f["photo"]["class"] for f in photos})) + "."
+        flagged = [f for f in photos if f["photo"]["defects"]]
+        if flagged:
+            summary += f" {len(flagged)} photograph(s) show a possible defect to verify on site."
+    evidence = []
+    for f in found[:60]:
+        if f["kind"] == "photo":
+            note, detail, kind = _photo_note(f)
+        else:
+            note, detail, kind = MARK_LABEL[f["kind"]] + (f" ({f['colour']} ink)" if f.get("colour") and f["colour"] != "dark" else ""), None, f["kind"]
+        evidence.append({"type": "page", "page_no": f["page_no"], "bbox": f["bbox"], "kind": kind, "note": note} | ({"detail": detail} if detail else {}))
+    return Check("ink_regions", "visual_elements", "info", "Signatures, stamps and photographs", summary,
+                 {"regions": found[:60], "counts": count}, evidence)
 
 
 # ---------------------------------------------------------------- QR / barcodes
