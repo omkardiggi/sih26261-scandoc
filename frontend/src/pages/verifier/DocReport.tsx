@@ -7,7 +7,8 @@ import { human } from "../../labels";
 type Mark = { n: number; label: string; value: string; page_no: number; boxes: number[][]; tone: string };
 const TONE_WORD: Record<string, string> = { valid: "Matches", invalid: "Does not match", warning: "Check", neutral: "Read", qr: "QR code", tamper: "Suspicious", vision: "AI detected", defect: "Possible defect",
   sign: "Signature", stamp: "Stamp / seal", photo: "Photograph", emblem: "Logo" };
-const MARK_TONE: Record<string, string> = { signature: "sign", handwriting: "sign", stamp: "stamp", photo: "photo", photo_defect: "defect", emblem: "emblem" };
+// Only real evidence is boxed on the page: signatures, stamps/seals and photographs (not logos or handwritten notes).
+const MARK_TONE: Record<string, string> = { signature: "sign", stamp: "stamp", photo: "photo", photo_defect: "defect" };
 const MARK_VALUE: Record<string, string> = { signature: "Located on the page - compare with the specimen", handwriting: "Handwritten text or initials - check it is authorised",
   stamp: "Seal impression located on the page", photo: "Photograph in the document", photo_defect: "Photograph with a possible defect", emblem: "Printed logo" };
 const KIND_WORD: Record<string, string> = { image_region: "Image, emblem or photograph on the page", object: "Object in a photograph", evidence: "Visual evidence", defect: "Possible visible defect" };
@@ -290,7 +291,7 @@ export default function DocReport({ x, reload, autoReview }: { x: any; reload: (
           <div className="legend">
             <span><i className="lgd t-valid" /> matches record</span><span><i className="lgd t-invalid" /> does not match</span><span><i className="lgd t-warning" /> check</span>
             <span><i className="lgd t-neutral" /> detail read</span><span><i className="lgd t-sign" /> signature</span><span><i className="lgd t-stamp" /> stamp / seal</span>
-            <span><i className="lgd t-photo" /> photograph</span><span><i className="lgd t-emblem" /> logo</span><span><i className="lgd t-qr" /> QR code</span><span><i className="lgd t-vision" /> AI detected</span><span><i className="lgd t-tamper" /> suspicious</span>
+            <span><i className="lgd t-photo" /> photograph</span><span><i className="lgd t-qr" /> QR code</span><span><i className="lgd t-vision" /> AI detected</span><span><i className="lgd t-tamper" /> suspicious</span>
             <label className="read-toggle"><input type="checkbox" checked={showReads} onChange={(e) => setShowReads(e.target.checked)} /> text lines read</label>
           </div>
         </div>

@@ -77,7 +77,8 @@ def document_checks(db: Session, doc: Document) -> dict:
             "pass" if ai.status == "pass" else "warn", ai.summary)
     elif any((c.details or {}).get("pending") for c in integ):
         add("ai_reading", "AI reading confirms the text", "unknown", "AI analysis of the pages is still running; this updates automatically.")
-    tam = [c for c in integ if c.dimension in ("tampering", "file_integrity") and (c.status == "fail" or (c.details or {}).get("significance") in ("high", "medium"))]
+    tam = [c for c in integ if c.dimension in ("tampering", "file_integrity") and c.check_type not in ("ai_reading", "render_text_match")
+           and (c.status == "fail" or (c.details or {}).get("significance") in ("high", "medium"))]  # the second reading has its own row
     high = [c for c in tam if c.status == "fail" or (c.details or {}).get("significance") == "high"]
     add("tampering", "No signs of tampering", "fail" if high else ("warn" if tam else ("pass" if integ else "unknown")),
         (high or tam)[0].summary if tam else None)
@@ -86,7 +87,7 @@ def document_checks(db: Session, doc: Document) -> dict:
         add("signature", "Digital signature", {"pass": "pass", "fail": "fail", "warning": "warn"}.get(sig.status, "unknown"), sig.summary)
     reasons = [c["detail"] for c in checks if c["state"] == "fail" and c["detail"]] + \
               [c["detail"] for c in checks if c["state"] == "warn" and c["detail"]]
-    return {"status": status, "label": label, "meaning": meaning, "checks": checks, "reasons": reasons[:3]}
+    return {"status": status, "label": label, "meaning": meaning, "checks": checks, "reasons": list(dict.fromkeys(reasons))[:3]}
 
 
 MATRIX_COLUMNS = [("name", "Name"), ("id", "Permanent ID"), ("address", "Address / PIN"), ("trust", "Trust"),

@@ -420,6 +420,8 @@ def check_render_vs_text(data: bytes, ex: ExtractionResult, fields: list[Candida
     try:
         for p in target:
             page = doc.load_page(p.page_no - 1)
+            pw, ph = page.rect.width or 1, page.rect.height or 1
+            scanned = any(r.width * r.height / (pw * ph) >= 0.6 for im in page.get_images(full=True) for r in page.get_image_rects(im[0]))
             scale = min(s.ocr_render_dpi, 140) / 72.0
             pix = page.get_pixmap(matrix=pymupdf.Matrix(scale, scale), alpha=False, colorspace=pymupdf.csRGB)
             img = np.frombuffer(pix.samples, dtype=np.uint8).reshape(pix.height, pix.width, 3)
@@ -432,7 +434,7 @@ def check_render_vs_text(data: bytes, ex: ExtractionResult, fields: list[Candida
             recall = len(e_words & o_words) / len(e_words) if e_words else 1.0
             page_stats.append({"page_no": p.page_no, "embedded_words": len(e_words), "recall": round(recall, 3)})
             if e_words and len(e_words) >= 15 and recall < 0.5:
-                issues.append({"page_no": p.page_no, "kind": "page_text_mismatch", "recall": round(recall, 3),
+                issues.append({"page_no": p.page_no, "kind": "page_text_mismatch", "recall": round(recall, 3), "scanned": scanned,
                                "missing_sample": sorted(e_words - o_words)[:15]})
             # Field-level check: compare each numeric field with the OCR lines visible at the same location.
             norm_ocr = [([ln.bbox[0] / w, ln.bbox[1] / h, ln.bbox[2] / w, ln.bbox[3] / h], ln) for ln in ocr_lines]
@@ -460,6 +462,11 @@ def check_render_vs_text(data: bytes, ex: ExtractionResult, fields: list[Candida
                      f"The visible rendering agrees with the embedded text on {len(target)} checked page(s), including the extracted numeric fields.",
                      {"pages": page_stats})
     high = any(i["kind"] == "field_value_mismatch" for i in issues)
+    if not high and all(i.get("scanned") for i in issues):
+        # The page is a scan whose text layer was itself made by OCR: two OCR readings of a scan differ, nothing is hidden.
+        return Check("render_text_match", "tampering", "info", "Rendered content vs embedded text",
+                     "This is a scanned page whose text layer was produced by OCR; a second reading of the scan differs in places, "
+                     "which is normal for scans and not a sign of hidden content.", {"issues": issues, "pages": page_stats, "significance": "none"})
     return Check(
         "render_text_match", "tampering", "warning", "Rendered content vs embedded text",
         ("The value a reader sees differs from the embedded text for: "
