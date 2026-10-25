@@ -11,3 +11,11 @@ frontend/playwright-report/
 .vercel/
 vercel.env
 backend/.pytest_cache/
+
+.vercel
+.env*
+deploy.log
+.agents/
+.claude/
+skills-lock.json
+.env*.local

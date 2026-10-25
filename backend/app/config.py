@@ -190,9 +190,16 @@ def _vercel_defaults() -> None:
     }
     if db:
         defaults["DATABASE_URL"] = db
+    if os.environ.get("DATABASE_URL_UNPOOLED"):
+        # A direct connection: the start-up migration lock and prepared statements need a real session, not a pooler.
+        os.environ["DATABASE_URL"] = os.environ["DATABASE_URL_UNPOOLED"]
     for k, v in defaults.items():
         if v:
             os.environ.setdefault(k, v)
+    # Custom domains may be listed in ALLOWED_ORIGINS; this deployment's own Vercel addresses are always allowed.
+    own = [f"https://{h}" for h in hosts]
+    listed = [o for o in os.environ.get("ALLOWED_ORIGINS", "").split(",") if o.strip()]
+    os.environ["ALLOWED_ORIGINS"] = ",".join(dict.fromkeys(listed + own))
 
 
 @lru_cache
