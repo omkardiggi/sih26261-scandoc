@@ -41,23 +41,32 @@ def _load() -> dict:
         if _state:
             return _state
         custom, meta = MODEL_DIR / "photo_model.onnx", MODEL_DIR / "photo_model.json"
+        general = _load_general()
         if custom.exists() and meta.exists():
             m = json.loads(meta.read_text(encoding="utf-8"))
             _state.update(kind="custom", sess=_session(custom), labels=m["labels"], defect_labels=set(m.get("defect_labels", [])),
                           size=int(m.get("input_size", 224)), mean=np.array(m.get("mean", [0.485, 0.456, 0.406]), dtype=np.float32),
-                          std=np.array(m.get("std", [0.229, 0.224, 0.225]), dtype=np.float32), name=m.get("name", "officer-trained model"))
-        elif (MODEL_DIR / "clip_vision_q.onnx").exists() and (MODEL_DIR / "clip_labels.json").exists():
-            labels = json.loads((MODEL_DIR / "clip_labels.json").read_text(encoding="utf-8"))
-            _state.update(kind="clip", sess=_session(MODEL_DIR / "clip_vision_q.onnx"),
-                          classes=[c["name"] for c in labels["classes"]],
-                          class_emb=np.array([c["embedding"] for c in labels["classes"]], dtype=np.float32),
-                          defects=[d["name"] for d in labels["defects"]],
-                          defect_emb=np.array([d["embedding"] for d in labels["defects"]], dtype=np.float32),
-                          good=np.array(labels["good"], dtype=np.float32).reshape(-1, 512), size=224, mean=CLIP_MEAN, std=CLIP_STD,
-                          name="general image model")
+                          std=np.array(m.get("std", [0.229, 0.224, 0.225]), dtype=np.float32), name=m.get("name", "officer-trained model"),
+                          general=general)
+        elif general:
+            _state.update(general)
         else:
             _state.update(kind="none")
         return _state
+
+
+def _load_general() -> dict | None:
+    """The bundled general image model (CLIP) with its class and defect descriptions, if present."""
+    if not ((MODEL_DIR / "clip_vision_q.onnx").exists() and (MODEL_DIR / "clip_labels.json").exists()):
+        return None
+    labels = json.loads((MODEL_DIR / "clip_labels.json").read_text(encoding="utf-8"))
+    return dict(kind="clip", sess=_session(MODEL_DIR / "clip_vision_q.onnx"),
+                classes=[c["name"] for c in labels["classes"]],
+                class_emb=np.array([c["embedding"] for c in labels["classes"]], dtype=np.float32),
+                defects=[d["name"] for d in labels["defects"]],
+                defect_emb=np.array([d["embedding"] for d in labels["defects"]], dtype=np.float32),
+                good=np.array(labels["good"], dtype=np.float32).reshape(-1, 512), size=224, mean=CLIP_MEAN, std=CLIP_STD,
+                name="general image model")
 
 
 def available() -> bool:
@@ -84,11 +93,23 @@ def _softmax(x: np.ndarray) -> np.ndarray:
     return e / e.sum()
 
 
+TRAINED_MIN_CONFIDENCE = 0.85  # below this the trained model is probably seeing something it was not taught
+
+
 def analyse(img_rgb: np.ndarray) -> dict | None:
     """{class, score, top: [(name, score)], defects: [{name, score}], model} for one photograph, or None."""
     if not available() or img_rgb.size == 0 or min(img_rgb.shape[:2]) < 24:
         return None
     st = _load()
+    r = _analyse_with(st, img_rgb)
+    if st["kind"] == "custom" and r["score"] < TRAINED_MIN_CONFIDENCE and not r["defects"] and st.get("general"):
+        g = _analyse_with(st["general"], img_rgb)
+        g["model"] = "general image model (not in the trained classes)"
+        return g
+    return r
+
+
+def _analyse_with(st: dict, img_rgb: np.ndarray) -> dict:
     x = _prepare(img_rgb, st["size"], st["mean"], st["std"])
     if st["kind"] == "custom":
         logits = st["sess"].run(None, {st["sess"].get_inputs()[0].name: x})[0][0]

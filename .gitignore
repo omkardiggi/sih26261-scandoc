@@ -16,3 +16,5 @@ backend/.pytest_cache/
 .env*
 deploy.log
 .env*.local
+clg train datasets/
+*.zip

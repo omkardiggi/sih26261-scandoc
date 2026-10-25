@@ -90,3 +90,19 @@ def session_scope() -> Iterator[Session]:
 
 def is_sqlite() -> bool:
     return get_settings().database_url.startswith("sqlite")
+
+
+@event.listens_for(Session, "do_orm_execute")
+def _hide_removed_documents(state) -> None:
+    """Documents an officer removed are left out of every query (the record and its audit trail are kept).
+
+    Pass ``execution_options(include_removed=True)`` to see them, e.g. for the audit view or to undo a removal.
+    """
+    if state.is_select and not state.is_column_load and not state.is_relationship_load \
+            and not state.execution_options.get("include_removed", False):
+        from sqlalchemy.orm import with_loader_criteria
+
+        from .models import Document
+
+        state.statement = state.statement.options(
+            with_loader_criteria(Document, lambda cls: cls.status != "removed", include_aliases=True))

@@ -734,7 +734,13 @@ def _stroke_shape(strokes: np.ndarray) -> tuple[float, int, float]:
     return max(c[2] for c in big) / max(strokes.shape[1], 1), len(big), float(heights.std() / max(heights.mean(), 1.0))
 
 
-def _detect_marks(arr: np.ndarray, text_boxes: list[list[float]], digital: bool) -> list[dict]:
+SIGN_WORDS = re.compile(r"(?i)\b(sign|signature|signed|faithfully|sincerely|principal|director|registrar|authori[sz]ed|attested|permitted)")
+
+
+SIGN_CAPTION = re.compile(r"(?i)^\W*(sign|signature|signed|yours|faithfully|sincerely|principal|director|registrar|authori[sz]ed|attested|permitted)")
+
+
+def _detect_marks(arr: np.ndarray, text_boxes: list[list[float]], digital: bool, lines: list | None = None) -> list[dict]:
     """Locate stamps/seals, signatures, photographs and logos on a page image (RGB).
 
     Coloured ink (any hue from green to violet, or red) and dark pen strokes count only where they contain long connected
@@ -776,9 +782,47 @@ def _detect_marks(arr: np.ndarray, text_boxes: list[list[float]], digital: bool)
                 return True
         return False
 
-    def add(kind, x, y, w, h, colour=None):
-        if kind == "signature" and inline_with_print(x, y, w, h):
-            kind = "handwriting"
+    def read_text(x, y, w, h) -> tuple[str, float]:
+        """Text the reader recognised inside the region, and its mean confidence (digital text counts as certain)."""
+        got, confs = [], []
+        for ln in lines or []:
+            if not ln.bbox:
+                continue
+            bx0, by0, bx1, by1 = ln.bbox[0] * W, ln.bbox[1] * H, ln.bbox[2] * W, ln.bbox[3] * H
+            iw, ih = min(x + w, bx1) - max(x, bx0), min(y + h, by1) - max(y, by0)
+            if iw > 0 and ih > 0 and iw * ih >= 0.5 * max(1.0, (bx1 - bx0) * (by1 - by0)) and not SIGN_WORDS.search(ln.text or ""):
+                got.append(ln.text)  # printed labels such as "Principal" inside the box are not the handwriting
+                confs.append(1.0 if ln.confidence is None else ln.confidence)
+        return " ".join(got), (sum(confs) / len(confs) if confs else 0.0)
+
+    def near_sign_label(x, y, w, h) -> str | None:
+        """'strong' next to a printed 'Signature' / 'Signed' label, 'weak' near 'Yours faithfully' / 'Principal' etc."""
+        found = None
+        for ln in lines or []:
+            # A caption starts with the role ("Principal", "Yours faithfully"); "The Principal," is an addressee line.
+            if not ln.bbox or not SIGN_CAPTION.match(ln.text or ""):
+                continue
+            bx0, by0, bx1, by1 = ln.bbox[0] * W, ln.bbox[1] * H, ln.bbox[2] * W, ln.bbox[3] * H
+            vertical_gap = max(by0 - (y + h), y - by1, 0)
+            horizontal_gap = max(bx0 - (x + w), x - bx1, 0)
+            if vertical_gap < 0.06 * H and horizontal_gap < 0.3 * W:
+                if re.search(r"(?i)\bsign", ln.text):
+                    return "strong"
+                found = "weak"
+        return found
+
+    def add(kind, x, y, w, h, colour=None, hvar: float | None = None):
+        if kind == "signature":
+            text, conf = read_text(x, y, w, h)
+            words = [t for t in re.findall(r"[A-Za-z]{3,}", text)]
+            legible = len(re.sub(r"[^A-Za-z0-9]", "", text)) >= 6 and conf >= 0.55
+            if legible and conf >= 0.8 and hvar is not None and hvar < 0.45 and h <= 2.2 * line_h:
+                return  # one confidently read line of even letters: printed text in coloured ink, not handwriting
+            label = near_sign_label(x, y, w, h)
+            if label == "strong" or (label == "weak" and not (legible and len(words) >= 3)):
+                pass  # ink at a signature label is the signature (unless it reads as a name or address near "Principal")
+            elif legible or inline_with_print(x, y, w, h):
+                kind = "handwriting"  # readable writing: a name, address, date or reference number
         if kind != "photo" and in_photo[y:y + h, x:x + w].mean() > 0.3:
             return  # objects inside a photograph are not stamps or signatures
         if kind in ("signature", "handwriting", "stamp") and any(overlaps(k, x, y, w, h) for k in ("signature", "handwriting", "stamp")):
@@ -806,7 +850,9 @@ def _detect_marks(arr: np.ndarray, text_boxes: list[list[float]], digital: bool)
         ink_px = int(ink.sum())
         if ink_px < 120 or ink_px < 0.5 * int(black_print[y:y + h, x:x + w].sum()):
             continue  # colour speckle around black print (scanner noise), not ink
-        bars = int(cv2.morphologyEx(ink.astype(np.uint8), cv2.MORPH_OPEN, np.ones((1, max(8, w // 4)), np.uint8)).sum())
+        bar_mask = cv2.morphologyEx(ink.astype(np.uint8), cv2.MORPH_OPEN, np.ones((1, max(8, w // 4)), np.uint8))
+        bars = int(bar_mask.sum())
+        _l, _p, hvar_text = _stroke_shape(ink & ~(cv2.dilate(bar_mask, np.ones((3, 3), np.uint8)) > 0))  # ignoring underlines
         if bars >= 0.6 * ink_px:
             continue  # coloured rules, banners and menu bars
         solid = int(cv2.erode(ink.astype(np.uint8), np.ones((5, 5), np.uint8)).sum()) / ink_px
@@ -820,7 +866,7 @@ def _detect_marks(arr: np.ndarray, text_boxes: list[list[float]], digital: bool)
         elif compact and (pieces >= 10 or fill >= 0.2):
             add("emblem" if digital and y < 0.15 * H else "stamp", x, y, w, h, colour)  # ring/border with small lettering
         elif 0.05 * W <= w <= 0.6 * W and solid < 0.25:
-            add("signature", x, y, w, h, colour)  # thin pen strokes (solid blocks are UI or print, not ink)
+            add("signature", x, y, w, h, colour, hvar=hvar_text)  # thin pen strokes (solid blocks are UI or print, not ink)
 
     # 2) dark pen strokes (black / blue-black signatures)
     dark = ((gray < 120) & ~coloured).astype(np.uint8) * 255
@@ -843,7 +889,7 @@ def _detect_marks(arr: np.ndarray, text_boxes: list[list[float]], digital: bool)
             continue  # printed words: letters of even height, none long
         if text_mask[y:y + h, x:x + w].mean() > 0.6 and pieces > 12:
             continue  # a printed line the text reader read
-        add("signature", x, y, w, h, "dark")
+        add("signature", x, y, w, h, "dark", hvar=hvar)
     for x, y, w, h in [b for p in photos for b in _split_photo(arr, p)]:
         if w * h >= 0.004 * W * H:
             add("photo", x, y, w, h)
@@ -890,7 +936,7 @@ def check_ink_regions(ex: ExtractionResult) -> Check:
         except Exception:  # noqa: BLE001
             continue
         boxes = [ln.bbox for ln in p.lines if ln.bbox and len(ln.text.strip()) >= 2]
-        for m in _detect_marks(arr, boxes, digital=p.text_source == "embedded"):
+        for m in _detect_marks(arr, boxes, digital=p.text_source == "embedded", lines=p.lines):
             if m["kind"] == "photo":
                 m["photo"] = _recognise_photo(arr, m["bbox"])
             found.append({"page_no": p.page_no, **m})

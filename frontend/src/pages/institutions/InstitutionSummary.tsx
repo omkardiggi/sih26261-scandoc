@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { AlertTriangle, CheckCircle2, Clock, FileUp, Gavel, Info, ListChecks, RotateCcw, Sparkles, UploadCloud, XCircle } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Clock, FileUp, Gavel, Info, ListChecks, RotateCcw, Sparkles, Trash2, UploadCloud, XCircle } from "lucide-react";
 import { api, idempotencyKey, useApi, usePoll } from "../../api";
 import { Banner, Button, ErrorState, fmtBytes, fmtDate, Modal, Spinner, useToast } from "../../ui";
 import DocumentUpload from "../../components/DocumentUpload";
+import RemoveDocument from "../../components/RemoveDocument";
 
 const VERDICT_ICON: Record<string, any> = { ok: CheckCircle2, bad: XCircle, warn: AlertTriangle, info: Clock, neutral: Info };
 const CELL: Record<string, [string, string]> = {
@@ -23,6 +24,8 @@ export default function InstitutionSummary({ inst }: { inst: any }) {
   const nav = useNavigate();
   const toast = useToast();
   const s = useApi<any>(`/api/institutions/${inst.id}/document-summary`, [inst.id]);
+  const removed = useApi<any>(`/api/institutions/${inst.id}/removed-documents`, [inst.id]);
+  const [removing, setRemoving] = useState<{ id: string; title: string } | null>(null);
   const [queue, setQueue] = useState<{ name: string; size: number; state: string; msg?: string }[]>([]);
   const [drag, setDrag] = useState(false);
   const [slotUpload, setSlotUpload] = useState<{ key: string; label: string } | null>(null);
@@ -133,7 +136,7 @@ export default function InstitutionSummary({ inst }: { inst: any }) {
           {d.matrix.length === 0 ? <div className="muted small" style={{ padding: 16, textAlign: "center" }}>No documents yet — upload them above.</div> : (
             <div className="table-wrap">
               <table className="table matrix">
-                <thead><tr><th>Document</th><th>Result</th>{d.columns.map((col: any) => <th key={col.key} className="mc">{col.label}</th>)}</tr></thead>
+                <thead><tr><th>Document</th><th>Result</th>{d.columns.map((col: any) => <th key={col.key} className="mc">{col.label}</th>)}<th /></tr></thead>
                 <tbody>{d.matrix.map((r: any) => (
                   <tr key={r.id} className="clickable" onClick={() => nav(`/app/verifier/documents/${r.id}`)}>
                     <td style={{ minWidth: 220 }}><div style={{ fontWeight: 650 }} className="break">{r.title}</div><div className="muted tiny">{r.category}</div>
@@ -141,6 +144,7 @@ export default function InstitutionSummary({ inst }: { inst: any }) {
                     <td><span className={`chip ${r.status}`}>{r.label}</span>
                       {(r.status === "problem" || r.status === "review") && <div><button className="btn-review sm" style={{ marginTop: 6 }} onClick={(e) => { e.stopPropagation(); nav(`/app/verifier/documents/${r.id}?review=1`); }}>Review</button></div>}</td>
                     {d.columns.map((col: any) => { const [g, cls] = CELL[r.cells[col.key]] || CELL.na; return <td key={col.key} className="mc"><span className={`cell ${cls}`}>{g}</span></td>; })}
+                    <td><button className="row-trash" title="Remove document" aria-label={`Remove ${r.title}`} onClick={(e) => { e.stopPropagation(); setRemoving({ id: r.id, title: r.title }); }}><Trash2 size={15} /></button></td>
                   </tr>
                 ))}</tbody>
               </table>
@@ -150,6 +154,18 @@ export default function InstitutionSummary({ inst }: { inst: any }) {
         </div>
       </section>
 
+      <RemoveDocument doc={removing} onClose={() => setRemoving(null)} onDone={() => { setRemoving(null); s.reload(); removed.reload(); }} />
+      {removed.data?.items?.length > 0 && (
+        <details className="card card-body small">
+          <summary style={{ cursor: "pointer" }}>Removed documents ({removed.data.items.length})</summary>
+          <div className="stack sm" style={{ marginTop: 8 }}>{removed.data.items.map((r: any) => (
+            <div key={r.id} className="row between" style={{ gap: 12 }}>
+              <span className="break"><strong>{r.title}</strong> <span className="muted">· {r.reason} · {fmtDate(r.removed_at, true)}</span></span>
+              <Button size="sm" onClick={async () => { await api(`/api/documents/${r.id}/restore`, { method: "POST" }); s.reload(); removed.reload(); }}>Restore</Button>
+            </div>
+          ))}</div>
+        </details>
+      )}
       {missing.length > 0 && (
         <section className="card card-body stack sm">
           <h3>Required documents not uploaded yet</h3>

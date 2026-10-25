@@ -532,3 +532,8 @@ body { background: var(--bg) !important; }
 .read-tip { position: absolute; z-index: 5; max-width: 60%; padding: 6px 9px; border-radius: 8px; background: var(--surface); color: var(--text);
   border: 1px solid var(--border); box-shadow: var(--shadow); font-size: 12.5px; pointer-events: none; }
 .read-toggle { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; }
+.btn.danger { background: #dc2626; border-color: #dc2626; color: #fff; }
+.btn.danger:hover { filter: brightness(1.08); }
+.btn.danger-ghost { color: #dc2626; border-color: color-mix(in srgb, #dc2626 45%, var(--border)); background: transparent; }
+.row-trash { all: unset; cursor: pointer; padding: 4px; border-radius: 6px; color: var(--text-2); display: inline-flex; }
+.row-trash:hover { color: #dc2626; background: color-mix(in srgb, #dc2626 10%, transparent); }

@@ -345,6 +345,56 @@ def update_document(doc_id: str, body: DocumentPatch, auth: Auth = Depends(requi
     return ser.document(doc)
 
 
+class RemoveIn(BaseModel):
+    reason: str = Field(min_length=3, max_length=2000)
+
+
+@router.post("/documents/{doc_id}/remove")
+def remove_document(doc_id: str, body: RemoveIn, auth: Auth = Depends(require_officer), db: Session = Depends(get_db)) -> dict:
+    """Take a document out of the institution's file (wrong upload, duplicate...). The record, file and audit trail are
+    kept so the removal can be reviewed or undone; it no longer appears in lists, summaries, cases or checks."""
+    from ..models import Finding
+
+    doc = get_or_404(db, Document, doc_id, "Document")
+    before = ser.document(doc)
+    doc.status, doc.status_reason = "removed", f"Removed by {auth.officer.full_name}: {body.reason}"
+    for f in db.execute(select(Finding).where(Finding.document_id == doc.id, Finding.status == "open")).scalars():
+        f.status, f.resolved_at, f.resolution_note = "dismissed", utcnow(), f"Document removed: {body.reason}"[:2000]
+    db.flush()
+    audit.record(db, "document.removed", officer=auth.officer, entity_type="document", entity_id=doc.id, institution_id=doc.institution_id,
+                 case_id=doc.case_id, before=before, after=ser.document(doc), reason=body.reason, ctx=auth.ctx)
+    if doc.case_id:
+        enqueue(db, "evaluate_case", {"case_id": doc.case_id}, entity_type="case", entity_id=doc.case_id, institution_id=doc.institution_id,
+                created_by_id=auth.officer.id, priority=50)
+    db.commit()
+    return {"ok": True, "institution_id": doc.institution_id}
+
+
+@router.get("/institutions/{inst_id}/removed-documents")
+def removed_documents(inst_id: str, auth: Auth = Depends(require_officer), db: Session = Depends(get_db)) -> dict:
+    rows = db.execute(select(Document).where(Document.institution_id == inst_id, Document.status == "removed")
+                      .order_by(Document.updated_at.desc()).execution_options(include_removed=True)).scalars().all()
+    return {"items": [{"id": d.id, "title": d.title, "reason": d.status_reason, "removed_at": ser.iso(d.updated_at)} for d in rows]}
+
+
+@router.post("/documents/{doc_id}/restore")
+def restore_document(doc_id: str, auth: Auth = Depends(require_officer), db: Session = Depends(get_db)) -> dict:
+    from ..verification.engine import refresh_document_status
+
+    doc = db.execute(select(Document).where(Document.id == doc_id).execution_options(include_removed=True)).scalar_one_or_none()
+    if doc is None or doc.status != "removed":
+        raise HTTPException(404, "No removed document with this id.")
+    doc.status, doc.status_reason = "processing", None
+    refresh_document_status(db, doc)
+    audit.record(db, "document.restored", officer=auth.officer, entity_type="document", entity_id=doc.id,
+                 institution_id=doc.institution_id, case_id=doc.case_id, summary=f"Restored '{doc.title}'", ctx=auth.ctx)
+    if doc.case_id:
+        enqueue(db, "evaluate_case", {"case_id": doc.case_id}, entity_type="case", entity_id=doc.case_id, institution_id=doc.institution_id,
+                created_by_id=auth.officer.id, priority=50)
+    db.commit()
+    return {"ok": True}
+
+
 class CorrectionIn(BaseModel):
     value: str = Field(min_length=1, max_length=4000)
     reason: str = Field(min_length=3, max_length=2000)

@@ -1,11 +1,12 @@
 import { useMemo, useState } from "react";
-import { Link, useParams, useSearchParams } from "react-router-dom";
-import { Download, Pencil, RotateCcw, Upload } from "lucide-react";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { Download, Pencil, RotateCcw, Trash2, Upload } from "lucide-react";
 import { api, download, useApi, usePoll } from "../../api";
 import { DOC_STATUS, human, StatusBadge } from "../../labels";
 import { Badge, Banner, Button, Card, Empty, ErrorState, Field, fmtBytes, fmtDate, KV, Modal, PageHead, Progress, Spinner, Tabs, useToast } from "../../ui";
 import DocumentUpload from "../../components/DocumentUpload";
 import DocReport from "./DocReport";
+import RemoveDocument from "../../components/RemoveDocument";
 
 type HL = { page_no: number; bbox: number[]; tone?: string };
 
@@ -18,6 +19,8 @@ export default function DocumentReview() {
   const [, setHl] = useState<HL[]>([]);
   const [tab, setTab] = useState("fields");
   const [newVersion, setNewVersion] = useState(false);
+  const [removing, setRemoving] = useState(false);
+  const nav = useNavigate();
   const [artifact, setArtifact] = useState<any>(null);
   const processing = d.data && ["queued", "processing"].includes(d.data.version.processing_status);
   usePoll(!!processing || !!d.data?.ai_pending || !!d.data?.job && ["queued", "running"].includes(d.data.job.status), () => d.reload(true), 3000);
@@ -38,7 +41,10 @@ export default function DocumentReview() {
       <PageHead title={x.document.title} sub={<>{x.document.category_label || "Unclassified"}{x.document.category_source === "auto" && " (auto-classified)"} · {x.document.academic_year || "academic year not stated"} · version {x.version.version_no}</>}
         actions={<><StatusBadge map={DOC_STATUS} value={x.document.status} />
           <Button icon={<Download size={15} />} onClick={() => download(x.download_url).catch((e) => toast(e.message, "error"))}>Original</Button>
-          <Button icon={<Upload size={15} />} onClick={() => setNewVersion(true)}>New version</Button></>} />
+          <Button icon={<Upload size={15} />} onClick={() => setNewVersion(true)}>New version</Button>
+          <Button className="danger-ghost" icon={<Trash2 size={15} />} onClick={() => setRemoving(true)}>Remove</Button></>} />
+      <RemoveDocument doc={removing ? { id: x.document.id, title: x.document.title } : null} onClose={() => setRemoving(false)}
+        onDone={() => nav(`/app/institutions/${x.institution.id}`)} />
       {processing && (
         <Card><div className="stack sm"><div className="row between small"><strong>Processing</strong><span className="muted">{x.job?.progress_message}</span></div><Progress value={x.job?.progress || 0.02} /></div></Card>
       )}

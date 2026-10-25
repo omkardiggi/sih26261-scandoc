@@ -14,3 +14,5 @@ vercel.env
 docs
 .env.local
 deploy.log
+clg train datasets
+*.zip

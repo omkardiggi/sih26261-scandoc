@@ -254,14 +254,14 @@ def compare_names(document_name: str, registry_name: str, *, places: tuple[str |
     return NameComparison(status, score, clean_text(document_name), reg, matched, missing, extra, list(dict.fromkeys(notes)), reason)
 
 
-_INSTITUTION_WORD = re.compile(r"(?i)(college|institute|institution|university|school|polytechnic|academy|vidyalaya|mahavidyalaya)")
+_INSTITUTION_WORD = re.compile(r"(?i)\b(college|institute|institution|university|school|polytechnic|academy|vidyalaya|mahavidyalaya)\b")
 
 
 def _institution_named(lines: list[str]) -> str | None:
     """The first line that reads like some institution's name (used to say whose document this appears to be)."""
     for ln in lines:
         span = _name_span(ln)
-        if (_INSTITUTION_WORD.search(span) or re.match(r"(?i)^\s*m\s*/\s*s", ln)) and 3 <= len(_name_words(span)) <= 10 and len(span) <= 90:
+        if (_INSTITUTION_WORD.search(span) or re.match(r"(?i)^\s*m\s*/\s*s\b", ln)) and 3 <= len(_name_words(span)) <= 10 and len(span) <= 90:
             return span
     return None
 
