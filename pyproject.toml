@@ -1,0 +1,39 @@
+# Deployment manifest for Vercel (Python runtime). Local development uses backend/requirements*.txt.
+[project]
+name = "institution-verification-platform"
+version = "1.0.0"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "fastapi>=0.136,<0.137",
+    "uvicorn>=0.40,<0.41",
+    "SQLAlchemy>=2.0.40,<2.1",
+    "alembic>=1.16,<2.0",
+    "pydantic>=2.13,<3.0",
+    "pydantic-settings>=2.16,<3.0",
+    "python-multipart>=0.0.32",
+    "argon2-cffi>=25.1",
+    "cryptography>=46",
+    "httpx>=0.28,<0.29",
+    "python-dotenv>=1.0",
+    "psycopg[binary]>=3.2",
+    "pymupdf>=1.28,<1.29",
+    "pdfplumber>=0.11.10,<0.12",
+    "pypdf>=6.15,<7",
+    "pyhanko>=0.29",
+    "pyhanko-certvalidator>=0.27",
+    "rapidocr-onnxruntime>=1.2.3",
+    "opencv-python-headless>=4.10",
+    "numpy>=2.0",
+    "pillow>=12.0",
+    "rapidfuzz>=3.10",
+    "reportlab>=4.4",
+    "segno>=1.6",
+]
+
+[tool.uv]
+# The OCR engine depends on the desktop OpenCV build, which needs graphics libraries servers do not have;
+# the headless build listed above provides the same cv2 module.
+override-dependencies = ["opencv-python ; sys_platform == 'never'"]
+
+[tool.vercel]
+entrypoint = "index:app"

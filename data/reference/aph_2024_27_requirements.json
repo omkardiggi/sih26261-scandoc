@@ -1,0 +1,192 @@
+{
+  "source": {
+    "title": "AICTE Approval Process Handbook 2024-2027 (APH 2024-27)",
+    "applies_to_academic_years": ["2024-25", "2025-26", "2026-27"],
+    "retrieved_copy_url": "https://cdnbbsr.s3waas.gov.in/s35938b4d054136e5d59ada6ec9c295d7a/uploads/2025/03/2025031399.pdf",
+    "retrieved_copy_notes": "231-page PDF hosted on the Government S3WaaS CDN; PDF metadata creation date 2023-12-08 (Adobe InDesign). AICTE's own handbook page should be consulted for amendments and corrigenda issued after publication.",
+    "transcribed_on": "2026-10-24",
+    "status": "Transcribed from the handbook text. Each requirement must be confirmed by an officer against the latest notified handbook/corrigenda before relying on it."
+  },
+  "requirements": [
+    {
+      "import_key": "aph2427-a2-2.1-i",
+      "category_key": "affidavit",
+      "title": "Affidavit 2 (digitally signed by Chairman/Secretary, e-stamp paper of Rs. 100, sworn before a First Class Judicial Magistrate / Notary / Oath Commissioner)",
+      "application_type": "extension_of_approval",
+      "mandatory": true,
+      "source_reference": "APH 2024-27, Annexure-2, clause 2.1(i)",
+      "source_page": "p. 81 (PDF p. 97)",
+      "source_excerpt": "An Affidavit 2 with digital signature of the Chairman/ Secretary of the Trust/ Society/ Company on an e-stamp paper of Rs. 100/- duly sworn before a First Class Judicial Magistrate or Notary or an Oath Commissioner."
+    },
+    {
+      "import_key": "aph2427-a2-2.1-ii",
+      "category_key": "fee_payment_receipt",
+      "title": "Copy of pay receipt printed from the AICTE Web-Portal for Extension of Approval for the Academic Year",
+      "application_type": "extension_of_approval",
+      "mandatory": false,
+      "condition": "The handbook states \"if any\".",
+      "source_reference": "APH 2024-27, Annexure-2, clause 2.1(ii)",
+      "source_page": "p. 81 (PDF p. 97)",
+      "source_excerpt": "Copy of pay receipt print made on AICTE Web-Portal if any, in respect of Extension of Approval for the respective Academic Year."
+    },
+    {
+      "import_key": "aph2427-a2-2.1-iii",
+      "category_key": "occupancy_certificate",
+      "title": "Valid Occupancy / Completion Certificate / Building License / Form D issued by the Competent Authority",
+      "application_type": "extension_of_approval",
+      "mandatory": true,
+      "validity_rule": {"requires_valid_on_review_date": true},
+      "condition": "For Government buildings older than 50 years where originals are unavailable, a Competent Authority letter that AICTE building norms are fulfilled may be produced (Annexure-2, clause 2.1 preamble).",
+      "source_reference": "APH 2024-27, Annexure-2, clause 2.1(iii) (refers to Clause 7.17)",
+      "source_page": "p. 81 (PDF p. 97)",
+      "source_excerpt": "As per Clause 7.17 of the Approval Process Handbook, valid Occupancy/ Completion Certificate/ Building License/ Form D issued by the Competent Authority."
+    },
+    {
+      "import_key": "aph2427-a2-2.1-iv",
+      "category_key": "structural_stability_certificate",
+      "title": "Valid Structural Stability Certificate from a registered Structural Engineer (fit for human habitation)",
+      "application_type": "extension_of_approval",
+      "mandatory": false,
+      "condition": "Required if the building is more than thirty years from the issue of its Completion Certificate.",
+      "validity_rule": {"requires_valid_on_review_date": true},
+      "source_reference": "APH 2024-27, Annexure-2, clause 2.1(iv)",
+      "source_page": "p. 81 (PDF p. 97)",
+      "source_excerpt": "Valid Structural Stability Certificate from the registered Structural Engineer, if the Building is more than thirty years from the issue of Completion Certificate that the Building is fit for human habitation."
+    },
+    {
+      "import_key": "aph2427-a2-2.1-v",
+      "category_key": "fire_safety_certificate",
+      "title": "Valid Fire Safety Certificate issued by the Competent Authority",
+      "application_type": "extension_of_approval",
+      "mandatory": true,
+      "validity_rule": {"requires_valid_on_review_date": true},
+      "source_reference": "APH 2024-27, Annexure-2, clause 2.1(v)",
+      "source_page": "p. 81 (PDF p. 97)",
+      "source_excerpt": "A valid Fire Safety Certificate issued by the Competent Authority."
+    },
+    {
+      "import_key": "aph2427-a2-2.1-vi",
+      "category_key": "site_location_map",
+      "title": "Satellite map showing the geographical location of the land with latitude and longitude at the entrance of the main building",
+      "application_type": "extension_of_approval",
+      "mandatory": true,
+      "source_reference": "APH 2024-27, Annexure-2, clause 2.1(vi)",
+      "source_page": "p. 81 (PDF p. 97)",
+      "source_excerpt": "Satellite map, using suitable Web site, showing geographical location of the Land with latitude and longitude at the entrance of the main Building mentioned on it."
+    },
+    {
+      "import_key": "aph2427-a2-2.1-vii",
+      "category_key": "audited_financial_statement",
+      "title": "Audited statement of accounts of the Trust/Society/Company of the previous year",
+      "application_type": "extension_of_approval",
+      "mandatory": true,
+      "source_reference": "APH 2024-27, Annexure-2, clause 2.1(vii)",
+      "source_page": "p. 81 (PDF p. 97)",
+      "source_excerpt": "Audited statement of accounts of the Trust/ Society/ Company of the previous year."
+    },
+    {
+      "import_key": "aph2427-a1-1.1-i",
+      "category_key": "building_plan",
+      "title": "Building Plan (Certificate-2) prepared by a registered Architect / Licensed Surveyor and approved by the Competent Authority (two copies)",
+      "application_type": "new_institution",
+      "mandatory": true,
+      "source_reference": "APH 2024-27, Annexure-1, clause 1.1(i)",
+      "source_page": "p. 77 (PDF p. 93)",
+      "source_excerpt": "Building Plan of the Institution (Certificate-2) should have been prepared by an Architect registered with Council of Architecture/ Licensed Surveyor (Certificate-1) and approved by the Competent Authority as designated by concerned State Government/ UT (Annexure-14)."
+    },
+    {
+      "import_key": "aph2427-a1-1.1-ii",
+      "category_key": "affidavit",
+      "title": "Affidavit 2 on Non-Judicial / e-stamp paper of Rs. 100, duly sworn",
+      "application_type": "new_institution",
+      "mandatory": true,
+      "source_reference": "APH 2024-27, Annexure-1, clause 1.1(ii)",
+      "source_page": "p. 77 (PDF p. 93)",
+      "source_excerpt": "An Affidavit 2, on a Non-Judicial Stamp Paper/ e-stamp paper of Rs. 100/-, duly sworn before a First Class Judicial Magistrate or Notary or an Oath Commissioner."
+    },
+    {
+      "import_key": "aph2427-a1-1.1-iii",
+      "category_key": "resolution",
+      "title": "Resolution of the Applicant Organization in Format 3",
+      "application_type": "new_institution",
+      "mandatory": true,
+      "source_reference": "APH 2024-27, Annexure-1, clause 1.1(iii)",
+      "source_page": "p. 77 (PDF p. 93)",
+      "source_excerpt": "Resolution of the Applicant Organization in Format 3."
+    },
+    {
+      "import_key": "aph2427-a1-1.1-iv",
+      "category_key": "occupancy_certificate",
+      "title": "Occupancy / Completion Certificate / Building License / Form D from the Competent Authority (or affidavit to produce on completion)",
+      "application_type": "new_institution",
+      "mandatory": true,
+      "condition": "Where not yet available, an affidavit that it shall be produced on completion of the building is permitted by the clause.",
+      "source_reference": "APH 2024-27, Annexure-1, clause 1.1(iv)",
+      "source_page": "p. 77 (PDF p. 93)",
+      "source_excerpt": "Certificate of Occupancy Certificate/ Completion Certificate/ Building License/ Form D (as applicable) from the Competent Authority ... For the rest, an Affidavit ... that the same shall be produced on completion of the Building."
+    },
+    {
+      "import_key": "aph2427-a1-1.1-v",
+      "category_key": "fire_safety_certificate",
+      "title": "Valid Fire Safety Certificate issued by the Competent Authority",
+      "application_type": "new_institution",
+      "mandatory": true,
+      "validity_rule": {"requires_valid_on_review_date": true},
+      "source_reference": "APH 2024-27, Annexure-1, clause 1.1(v)",
+      "source_page": "p. 77 (PDF p. 93)",
+      "source_excerpt": "A valid Fire Safety Certificate issued by the Competent Authority."
+    },
+    {
+      "import_key": "aph2427-a1-1.1-vi",
+      "category_key": "bank_certificate",
+      "title": "Certificate 3 issued by the Bank Manager regarding financial status of the Applicant",
+      "application_type": "new_institution",
+      "mandatory": true,
+      "source_reference": "APH 2024-27, Annexure-1, clause 1.1(vi)",
+      "source_page": "p. 77 (PDF p. 93)",
+      "source_excerpt": "Certificate 3 issued by the Bank Manager regarding financial status of the Applicant."
+    },
+    {
+      "import_key": "aph2427-a1-1.1-vii",
+      "category_key": "application_form",
+      "title": "Hard copy of the complete application as uploaded to the AICTE Web-Portal",
+      "application_type": "new_institution",
+      "mandatory": true,
+      "source_reference": "APH 2024-27, Annexure-1, clause 1.1(vii)",
+      "source_page": "p. 77 (PDF p. 93)",
+      "source_excerpt": "A hard copy of the complete application as uploaded to AICTE Web-Portal."
+    },
+    {
+      "import_key": "aph2427-a1-1.1-viii",
+      "category_key": "registration_document",
+      "title": "Registration document of the Trust/Society/Company/PPP/BOT (members, objectives, MoA and Rules), attested by the Competent Authority",
+      "application_type": "new_institution",
+      "mandatory": true,
+      "source_reference": "APH 2024-27, Annexure-1, clause 1.1(viii)",
+      "source_page": "p. 77 (PDF p. 93)",
+      "source_excerpt": "A registration document of the Trust/ Society/ Company/ PPP/ BOT indicating its members, objectives and Memorandum of Association and Rules, duly attested/ certified by the concerned Competent Authority."
+    },
+    {
+      "import_key": "aph2427-a1-1.1-ix",
+      "category_key": "governance_document",
+      "title": "Recommended composition of the Board of Governors (Annexure-17)",
+      "application_type": "new_institution",
+      "mandatory": false,
+      "condition": "Standalone PGDM Institutions only.",
+      "source_reference": "APH 2024-27, Annexure-1, clause 1.1(ix)",
+      "source_page": "p. 77 (PDF p. 93)",
+      "source_excerpt": "For Standalone PGDM Institutions, details of the recommended composition of the Board of Governors of the Institution constituted as per Annexure-17 of the Approval Process Handbook."
+    },
+    {
+      "import_key": "aph2427-a1-1.1-xii",
+      "category_key": "land_document",
+      "title": "Land/Building ownership documents (registered sale/settlement/gift deed or registered lease of minimum 30 years) in the name of the Applicant",
+      "application_type": "new_institution",
+      "mandatory": true,
+      "condition": "Vernacular documents require a notarized English translation. Private lease cases require the additional documents listed after clause 1.1(xii).",
+      "source_reference": "APH 2024-27, Annexure-1, clause 1.1(xii)",
+      "source_page": "pp. 77-78 (PDF pp. 93-94)",
+      "source_excerpt": "Documents showing ownership of Land/ Building ... in the name of the Applicant in the form of Registered Settlement Deed/ Registered Sale Deed/ Irrevocable Gift Deed (Registered)/ Irrevocable Government/ Private Lease Deed (Registered) (for a period of minimum 30 years)."
+    }
+  ]
+}
