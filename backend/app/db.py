@@ -36,6 +36,8 @@ def get_engine() -> Engine:
     if _engine is None:
         url = get_settings().database_url
         kwargs: dict = {"pool_pre_ping": True}
+        if not url.startswith("sqlite"):
+            kwargs["pool_recycle"] = 240  # hosted Postgres closes idle connections; replace them before that happens
         if url.startswith("sqlite"):
             kwargs["connect_args"] = {"check_same_thread": False, "timeout": 15}
             if url.startswith("sqlite:///"):
