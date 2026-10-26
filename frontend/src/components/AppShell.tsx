@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Bell, Building2, ChevronsLeft, ClipboardCheck, FileSearch, LayoutDashboard, LogOut, Menu, Moon, ScanSearch, ShieldCheck, Sun, UserCog, Users } from "lucide-react";
+import { Bell, Building2, ChevronsLeft, ClipboardCheck, FileSearch, LayoutDashboard, LogOut, Menu, ScanSearch, ShieldCheck, UserCog, Users } from "lucide-react";
 import { api, useApi, usePoll } from "../api";
 import { useAuth } from "../auth";
-import { Button, fmtDate } from "../ui";
+import { Button, fmtDate, ThemeToggle } from "../ui";
 import { AccountPanel, OfficersPanel } from "./SettingsPanels";
 
 // Exactly five primary sections.
@@ -14,27 +14,6 @@ export const NAV = [
   { to: "/app/inspections", label: "Inspection & Analysis", icon: ScanSearch },
   { to: "/app/reports", label: "Reports & Audit", icon: ClipboardCheck },
 ];
-
-function useTheme() {
-  const [theme, setTheme] = useState<string>(() => {
-    try {
-      return localStorage.getItem("ivp-theme") || "light";
-    } catch {
-      return "";
-    }
-  });
-  useEffect(() => {
-    if (theme) document.documentElement.dataset.theme = theme;
-    else delete document.documentElement.dataset.theme;
-    try {
-      theme ? localStorage.setItem("ivp-theme", theme) : localStorage.removeItem("ivp-theme");
-    } catch {
-      /* storage unavailable */
-    }
-  }, [theme]);
-  const dark = theme === "dark";
-  return { dark, toggle: () => setTheme(dark ? "light" : "dark") };
-}
 
 // On serverless hosting the server cannot run background work on its own; while the app is open it asks the server
 // to run queued work (document processing, AI analysis, re-checks) and backs off when there is nothing to do.
@@ -73,7 +52,6 @@ export default function AppShell() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [menu, setMenu] = useState<"" | "account" | "bell">("");
   const [panel, setPanel] = useState<"" | "account" | "officers">("");
-  const theme = useTheme();
   const notes = useApi<any>("/api/notifications");
   usePoll(true, () => notes.reload(true), 20000);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -124,7 +102,7 @@ export default function AppShell() {
           <Button variant="ghost" icon={<Menu size={18} />} className="mobile-only" aria-label="Open navigation" onClick={() => setMobileOpen(true)} />
           <div className="grow" />
           <div className="row" ref={menuRef} style={{ position: "relative" }}>
-            <Button variant="ghost" icon={theme.dark ? <Sun size={17} /> : <Moon size={17} />} aria-label="Toggle colour theme" onClick={theme.toggle} />
+            <ThemeToggle />
             <Button variant="ghost" icon={<Bell size={17} />} aria-label={`Notifications (${notes.data?.unread || 0} unread)`} onClick={() => setMenu(menu === "bell" ? "" : "bell")}>
               {notes.data?.unread ? <span className="badge bad" style={{ height: 18, padding: "0 6px" }}>{notes.data.unread}</span> : null}
             </Button>

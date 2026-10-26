@@ -1,6 +1,22 @@
 // Shared UI primitives.
 import { createContext, ReactNode, useCallback, useContext, useEffect, useId, useRef, useState } from "react";
-import { AlertTriangle, CheckCircle2, ChevronLeft, ChevronRight, Info, Inbox, X, XCircle } from "lucide-react";
+import { AlertTriangle, CheckCircle2, ChevronLeft, ChevronRight, Eye, EyeOff, Info, Inbox, Moon, Sun, X, XCircle } from "lucide-react";
+
+export function ThemeToggle() {
+  const [dark, setDark] = useState(() => document.documentElement.dataset.theme === "dark");
+  const toggle = () => {
+    const next = dark ? "light" : "dark";
+    document.documentElement.dataset.theme = next;
+    try { localStorage.setItem("ivp-theme", next); } catch { /* storage unavailable */ }
+    setDark(!dark);
+  };
+  return <button type="button" className="btn" onClick={toggle} aria-label={`Switch to ${dark ? "light" : "dark"} mode`} title={`Switch to ${dark ? "light" : "dark"} mode`}><span aria-hidden="true">{dark ? <Sun size={16} /> : <Moon size={16} />}</span><span>{dark ? "Light mode" : "Dark mode"}</span></button>;
+}
+
+export function PasswordInput({ id, value, onChange, autoComplete = "new-password", required = true }: { id: string; value: string; onChange: (e: React.ChangeEvent<HTMLInputElement>) => void; autoComplete?: string; required?: boolean }) {
+  const [visible, setVisible] = useState(false);
+  return <div className="password-input-wrap"><input id={id} className="input" type={visible ? "text" : "password"} autoComplete={autoComplete} required={required} value={value} onChange={onChange} /><button type="button" className="password-visibility" onClick={() => setVisible((v) => !v)} aria-label={visible ? "Hide password" : "Show password"} aria-pressed={visible} title={visible ? "Hide password" : "Show password"}>{visible ? <EyeOff size={17} /> : <Eye size={17} />}</button></div>;
+}
 
 export function Button({ variant, size, icon, loading, children, className = "", ...rest }: any) {
   const cls = ["btn", variant, size, icon && !children ? "icon" : "", className].filter(Boolean).join(" ");
