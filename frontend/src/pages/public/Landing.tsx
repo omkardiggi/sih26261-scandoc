@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, Building2, FileCheck2, Fingerprint, History, Lock, ScanSearch, ShieldCheck, Scale } from "lucide-react";
+import { ThemeToggle } from "../../ui";
 
 export function PublicNav() {
   return (
@@ -13,7 +14,7 @@ export function PublicNav() {
         <a href="/#workflow">Workflow</a>
         <a href="/#security">Security</a>
       </nav>
-      <span className="row" style={{ gap: 8 }}><Link className="btn" to="/signup">Sign up</Link><Link className="btn primary" to="/login">Sign in</Link></span>
+      <span className="row wrap" style={{ gap: 8 }}><ThemeToggle /><Link className="btn" to="/signup">Sign up</Link><Link className="btn primary" to="/login">Log in</Link></span>
     </header>
   );
 }
@@ -55,7 +56,7 @@ export default function Landing() {
               A secure workspace to manage institution records, examine submitted documents and inspection media, compare claims with official sources, and record decisions with a complete audit trail.
             </p>
             <div className="row wrap" style={{ marginTop: 28, gap: 12 }}>
-              <Link className="btn primary" style={{ height: 42, padding: "0 18px" }} to="/login">Sign in <ArrowRight size={16} /></Link>
+              <Link className="btn primary" style={{ height: 42, padding: "0 18px" }} to="/login">Log in <ArrowRight size={16} /></Link>
               <Link className="btn" style={{ height: 42, padding: "0 18px" }} to="/signup">Create an account</Link>
               <a className="btn" style={{ height: 42, padding: "0 18px" }} href="#workflow">How verification works</a>
             </div>

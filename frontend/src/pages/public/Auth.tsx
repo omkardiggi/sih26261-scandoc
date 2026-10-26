@@ -3,15 +3,18 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { ShieldCheck } from "lucide-react";
 import { api } from "../../api";
 import { useAuth } from "../../auth";
-import { Banner, Button, Field } from "../../ui";
+import { Banner, Button, Field, PasswordInput, ThemeToggle } from "../../ui";
 
 function Shell({ title, sub, children }: { title: string; sub?: string; children: React.ReactNode }) {
   return (
     <div className="auth-wrap">
       <div className="card auth-card stack lg">
-        <Link to="/" className="row" style={{ color: "var(--text)", fontWeight: 650, textDecoration: "none" }}>
-          <span className="brand-mark"><ShieldCheck size={17} /></span> Institution Verification Platform
-        </Link>
+        <div className="row between wrap">
+          <Link to="/" className="row" style={{ color: "var(--text)", fontWeight: 650, textDecoration: "none" }}>
+            <span className="brand-mark"><ShieldCheck size={17} /></span> Institution Verification Platform
+          </Link>
+          <ThemeToggle />
+        </div>
         <div>
           <h1>{title}</h1>
           {sub && <p className="text-2 small" style={{ marginTop: 6 }}>{sub}</p>}
@@ -57,23 +60,23 @@ export function Login() {
     }
   };
   return (
-    <Shell title={mfa ? "Verify your sign-in" : "Officer sign in"} sub={mfa ? "Enter the 6-digit code from your authenticator app." : "Sign in with the email you registered with."}>
+    <Shell title={mfa ? "Verify your identity" : "Officer log in"} sub={mfa ? "Enter the 6-digit code from your authenticator app." : "Log in with the email you registered with."}>
       <form className="stack" onSubmit={submit}>
         {err && <Banner tone="bad">{err}</Banner>}
         {!mfa ? (
           <>
             <Field label="Email" htmlFor="email"><input id="email" className="input" type="email" autoComplete="username" required value={email} onChange={(e) => setEmail(e.target.value)} /></Field>
-            <Field label="Password" htmlFor="password"><input id="password" className="input" type="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} /></Field>
+            <Field label="Password" htmlFor="password"><PasswordInput id="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} /></Field>
           </>
         ) : (
           <Field label="Verification code" htmlFor="code"><input id="code" className="input" inputMode="numeric" autoComplete="one-time-code" maxLength={6} required value={code} onChange={(e) => setCode(e.target.value)} /></Field>
         )}
-        <button className="btn primary" style={{ height: 40 }} type="submit" disabled={busy}>{busy ? "Signing in…" : mfa ? "Verify" : "Sign in"}</button>
+        <button className="btn primary" style={{ height: 40 }} type="submit" disabled={busy}>{busy ? "Logging in…" : mfa ? "Verify" : "Log in"}</button>
         <div className="row between small">
           <Link to="/forgot-password">Forgot password?</Link>
           <Link to="/">Back to home</Link>
         </div>
-        {!mfa && <p className="small" style={{ textAlign: "center" }}>New here? <Link to="/signup">Create an account</Link></p>}
+        {!mfa && <p className="small" style={{ textAlign: "center" }}>New here? <Link to="/signup">Sign up</Link></p>}
       </form>
     </Shell>
   );
@@ -105,7 +108,7 @@ export function Signup() {
   };
   if (cfg && !cfg.enabled) return (
     <Shell title="Sign-up is not available" sub="Accounts on this server are created by invitation.">
-      <Link className="btn primary" to="/login">Go to sign in</Link>
+      <Link className="btn primary" to="/login">Go to log in</Link>
     </Shell>
   );
   return (
@@ -116,11 +119,11 @@ export function Signup() {
         <Field label="Email" htmlFor="s-email"><input id="s-email" className="input" type="email" autoComplete="email" required value={f.email} onChange={set("email")} /></Field>
         <Field label="Designation (optional)" htmlFor="s-desig"><input id="s-desig" className="input" value={f.designation} onChange={set("designation")} /></Field>
         <Field label="Password" hint="At least 12 characters using three of: lowercase, uppercase, digits, symbols." htmlFor="s-pw">
-          <input id="s-pw" className="input" type="password" autoComplete="new-password" required value={f.password} onChange={set("password")} />
+          <PasswordInput id="s-pw" value={f.password} onChange={set("password")} />
         </Field>
-        <Field label="Repeat password" htmlFor="s-pw2"><input id="s-pw2" className="input" type="password" autoComplete="new-password" required value={f.password2} onChange={set("password2")} /></Field>
+        <Field label="Repeat password" htmlFor="s-pw2"><PasswordInput id="s-pw2" value={f.password2} onChange={set("password2")} /></Field>
         <button className="btn primary" style={{ height: 40 }} type="submit" disabled={busy}>{busy ? "Creating account…" : "Create account"}</button>
-        <p className="small" style={{ textAlign: "center" }}>Already have an account? <Link to="/login">Sign in</Link></p>
+        <p className="small" style={{ textAlign: "center" }}>Already have an account? <Link to="/login">Log in</Link></p>
       </form>
     </Shell>
   );
@@ -155,7 +158,7 @@ export function ForgotPassword() {
             <button className="btn primary" style={{ height: 40 }} type="submit">Send reset link</button>
           </>
         )}
-        <Link className="small" to="/login">Back to sign in</Link>
+        <Link className="small" to="/login">Back to log in</Link>
       </form>
     </Shell>
   );
@@ -191,13 +194,13 @@ export function TokenPassword({ purpose }: { purpose: "invite" | "password_reset
     <Shell title={purpose === "invite" ? "Set up your officer account" : "Choose a new password"} sub={info ? `For ${info.email}` : undefined}>
       {err && <Banner tone="bad">{err}</Banner>}
       {done ? (
-        <><Banner tone="ok">{done}</Banner><Link className="btn primary" to="/login">Go to sign in</Link></>
+        <><Banner tone="ok">{done}</Banner><Link className="btn primary" to="/login">Go to log in</Link></>
       ) : info && (
         <form className="stack" onSubmit={submit}>
           <Field label="New password" hint="At least 12 characters using three of: lowercase, uppercase, digits, symbols." htmlFor="np">
-            <input id="np" className="input" type="password" autoComplete="new-password" required value={pw} onChange={(e) => setPw(e.target.value)} />
+            <PasswordInput id="np" value={pw} onChange={(e) => setPw(e.target.value)} />
           </Field>
-          <Field label="Repeat password" htmlFor="np2"><input id="np2" className="input" type="password" autoComplete="new-password" required value={pw2} onChange={(e) => setPw2(e.target.value)} /></Field>
+          <Field label="Repeat password" htmlFor="np2"><PasswordInput id="np2" value={pw2} onChange={(e) => setPw2(e.target.value)} /></Field>
           <Button variant="primary" type="submit" onClick={undefined} style={{ height: 40 }}>{purpose === "invite" ? "Activate account" : "Update password"}</Button>
         </form>
       )}
