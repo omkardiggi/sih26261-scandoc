@@ -15,7 +15,7 @@ export function BrandLogo({
   imgClassName = "brand-logo-img",
   videoSrc = "/logo.mp4",
   posterSrc = "/logo.png",
-  alt = "Docura emblem",
+  alt = "ScanDoc emblem",
   style,
   size
 }: BrandLogoProps) {

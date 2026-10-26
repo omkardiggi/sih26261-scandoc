@@ -1,4 +1,4 @@
-# Docura — Core Architecture
+# ScanDoc — Core Architecture
 
 AI-assisted verification of AICTE institution documents. **AI checks, the officer decides.**
 

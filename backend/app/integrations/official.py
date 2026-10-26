@@ -198,7 +198,7 @@ def verify_via_qr(integration: Integration, url: str, doc_fields: dict, doc_prog
                                    "Verify the document through another official channel; a QR code pointing elsewhere may itself be a concern.",
                                    source_name=name, source_url=None, request_summary={"url_host": urlsplit(url).hostname})
     try:
-        resp = http.request("GET", url, headers={"Accept": "text/html,application/json", "User-Agent": "Docura/1.0"})
+        resp = http.request("GET", url, headers={"Accept": "text/html,application/json", "User-Agent": "ScanDoc/1.0"})
     except http.OutboundBlocked as exc:
         return VerificationOutcome("unable_to_verify", f"Request blocked by outbound safety rules: {exc}", source_name=name, source_url=url)
     except http.OutboundError as exc:
@@ -432,7 +432,7 @@ def verify_generic_qr(integration: Integration, url: str, doc_fields: dict) -> V
                                    "Verify through the issuer's official website directly. A QR code pointing to an unexpected address may itself be a concern.",
                                    source_name=name, request_summary={"url_host": host})
     try:
-        resp = http.request("GET", url, headers={"Accept": "text/html,application/json,application/pdf", "User-Agent": "Docura/1.0"})
+        resp = http.request("GET", url, headers={"Accept": "text/html,application/json,application/pdf", "User-Agent": "ScanDoc/1.0"})
     except http.OutboundBlocked as exc:
         return VerificationOutcome("unable_to_verify", f"Request blocked by outbound safety rules: {exc}", source_name=name, source_url=url)
     except http.OutboundError as exc:

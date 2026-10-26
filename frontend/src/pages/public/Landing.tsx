@@ -57,7 +57,7 @@ export function PublicNav() {
       <Link to="/" className="brand-link">
         <BrandLogo size={36} />
         <div className="brand-name-group">
-          <span className="brand-wordmark">Docura</span>
+          <span className="brand-wordmark">ScanDoc</span>
           <span className="brand-tagline">Verification Suite</span>
         </div>
       </Link>
@@ -83,7 +83,7 @@ export function PublicFooter() {
         <div className="stack sm">
           <div className="row" style={{ gap: 10, alignItems: "center" }}>
             <BrandLogo size={28} style={{ borderRadius: 8 }} />
-            <span className="brand-wordmark" style={{ fontSize: 22 }}>Docura</span>
+            <span className="brand-wordmark" style={{ fontSize: 22 }}>ScanDoc</span>
             <span className="muted small" style={{ marginLeft: 6 }}>· Institutional Verification Platform</span>
           </div>
           <span className="muted small">Restricted to authorized AICTE Officers · Cryptographic evidence verification engine.</span>
@@ -170,7 +170,7 @@ export default function Landing() {
     <div className="landing-wrap" ref={containerRef}>
       <PublicNav />
 
-      {/* Docura brand spotlight */}
+      {/* ScanDoc brand spotlight */}
       <section className="hero-glass-section">
         <div className="hero-clean-centered scroll-reveal delay-1">
           {/* Luminous Brand Spotlight Capsule */}
@@ -179,7 +179,7 @@ export default function Landing() {
               <BrandLogo size="100%" />
             </div>
             <div className="hero-brand-callout">
-              <span className="brand-wordmark hero-brand-script">Docura</span>
+              <span className="brand-wordmark hero-brand-script">ScanDoc</span>
               <span className="hero-badge-pill-inline">AICTE Authorized Verification Suite</span>
             </div>
           </div>

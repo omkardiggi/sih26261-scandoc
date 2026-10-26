@@ -1,4 +1,4 @@
-# Docura — Institution Verification Platform
+# ScanDoc — Institution Verification Platform
 
 A web application for authorized **AICTE Officers** to manage institution records, verify submitted documents, analyse inspection photographs and videos, and record decisions, with every result evidence-linked and audited.
 

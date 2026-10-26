@@ -81,7 +81,7 @@ export default function AppShell() {
         <div className="brand">
           <BrandLogo size={32} style={{ borderRadius: 8, border: "1px solid rgba(133, 120, 97, 0.35)" }} />
           <span className="brand-text">
-            <span className="brand-wordmark" style={{ fontSize: 22, lineHeight: 1 }}>Docura</span>
+            <span className="brand-wordmark" style={{ fontSize: 22, lineHeight: 1 }}>ScanDoc</span>
             <span className="tiny muted" style={{ display: "block", fontSize: 9.5, letterSpacing: "0.04em", textTransform: "uppercase" }}>Verifier</span>
           </span>
         </div>

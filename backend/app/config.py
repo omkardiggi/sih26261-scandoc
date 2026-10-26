@@ -27,7 +27,7 @@ class Settings(BaseSettings):
     )
 
     app_env: Literal["development", "test", "production"] = "development"
-    app_name: str = "Docura"
+    app_name: str = "ScanDoc"
     public_base_url: str = "http://localhost:5173"
     allowed_origins: str = "http://localhost:5173,http://127.0.0.1:5173,http://localhost:8000"
 
