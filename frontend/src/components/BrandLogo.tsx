@@ -15,7 +15,7 @@ export function BrandLogo({
   imgClassName = "brand-logo-img",
   videoSrc = "/logo.mp4",
   posterSrc = "/logo.png",
-  alt = "Pixel Emblem",
+  alt = "Docura emblem",
   style,
   size
 }: BrandLogoProps) {

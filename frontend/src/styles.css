@@ -784,7 +784,7 @@ body { background: var(--bg) !important; }
   flex-direction: column;
   line-height: 1;
 }
-.brand-logo-pixel {
+.brand-wordmark {
   font-family: "Oleo Script", "Pacifico", cursive;
   font-size: 26px;
   font-weight: 700;
@@ -793,7 +793,7 @@ body { background: var(--bg) !important; }
   line-height: 1;
   display: inline-block;
 }
-:root[data-theme="dark"] .brand-logo-pixel {
+:root[data-theme="dark"] .brand-wordmark {
   color: #FAF6F0;
   text-shadow: 0 0 16px rgba(231, 212, 187, 0.25);
 }
@@ -913,12 +913,12 @@ body { background: var(--bg) !important; }
   align-items: center;
   gap: 12px;
 }
-.hero-pixel-script {
+.hero-brand-script {
   font-size: 32px;
   color: var(--brand-2);
   line-height: 1;
 }
-:root[data-theme="dark"] .hero-pixel-script {
+:root[data-theme="dark"] .hero-brand-script {
   color: #FAF6F0;
   text-shadow: 0 0 16px rgba(231, 212, 187, 0.4);
 }
