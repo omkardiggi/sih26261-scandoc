@@ -11,14 +11,20 @@ const STATE: Record<string, [string, string]> = {
   missing: ["Documents missing", "missing"], checking: ["Analysing…", "checking"], empty: ["No documents", "none"], decided: ["Decision recorded", "looks_correct"],
 };
 const RESULT_BARS = [
-  { key: "verified", label: "Verified", color: "#10b981" }, { key: "looks_correct", label: "Checks passed", color: "#3b82f6" },
-  { key: "review", label: "Needs review", color: "#f59e0b" }, { key: "problem", label: "Problem", color: "#ef4444" }, { key: "checking", label: "Analysing", color: "#8b5cf6" },
+  { key: "verified", label: "Verified", color: "#5483B3" },
+  { key: "looks_correct", label: "Checks passed", color: "#7DA0CA" },
+  { key: "review", label: "Needs review", color: "#d97706" },
+  { key: "problem", label: "Problem", color: "#ef4444" },
+  { key: "checking", label: "Analysing", color: "#4A5C6A" },
 ];
 
-function Stat({ label, value, icon: Icon, color, to }: { label: string; value: number; icon: any; color: string; to?: string }) {
+function Stat({ label, value, icon: Icon, tone = "neutral", to }: { label: string; value: number; icon: any; tone?: "brand" | "pass" | "fail" | "warn" | "accent" | "info" | "neutral"; to?: string }) {
   const body = (
-    <div className="kpi" style={{ background: color }}>
-      <span className="kpi-ic"><Icon size={20} /></span>
+    <div className={`kpi glass-kpi tone-${tone}`}>
+      <div className="kpi-top">
+        <span className={`kpi-ic ic-${tone}`}><Icon size={19} /></span>
+        <span className={`kpi-dot dot-${tone}`} />
+      </div>
       <span className="kpi-v">{value}</span>
       <span className="kpi-k">{label}</span>
     </div>
@@ -40,12 +46,12 @@ export default function Dashboard() {
     <>
       <PageHead title="Dashboard" sub="Which institutions' documents are correct, which have problems, and what is waiting for your decision." />
       <div className="kpis">
-        <Stat label="Institutions" value={c.institutions} icon={Building2} color="linear-gradient(135deg,#11212D,#253745)" to="/app/institutions" />
-        <Stat label="Documents correct" value={c.documents_correct} icon={CheckCircle2} color="linear-gradient(135deg,#047857,#10b981)" />
-        <Stat label="Documents with problems" value={c.documents_problem} icon={XCircle} color="linear-gradient(135deg,#b91c1c,#f43f5e)" />
-        <Stat label="Awaiting your decision" value={c.awaiting_decision} icon={Gavel} color="linear-gradient(135deg,#b45309,#f59e0b)" />
-        <Stat label="Decisions recorded" value={c.decided} icon={CheckCircle2} color="linear-gradient(135deg,#4d7c0f,#84cc16)" />
-        <Stat label="Being analysed" value={c.analysing} icon={Loader2} color="linear-gradient(135deg,#c2410c,#fb923c)" />
+        <Stat label="Institutions" value={c.institutions} icon={Building2} tone="brand" to="/app/institutions" />
+        <Stat label="Documents correct" value={c.documents_correct} icon={CheckCircle2} tone="pass" />
+        <Stat label="Documents with problems" value={c.documents_problem} icon={XCircle} tone="fail" />
+        <Stat label="Awaiting your decision" value={c.awaiting_decision} icon={Gavel} tone="warn" />
+        <Stat label="Decisions recorded" value={c.decided} icon={CheckCircle2} tone="accent" />
+        <Stat label="Being analysed" value={c.analysing} icon={Loader2} tone="info" />
       </div>
       <Card title="Institutions" sub="Problems and pending decisions first" actions={<Link className="btn primary sm" to="/app/institutions?new=1"><Plus size={14} /> Add institution</Link>}>
           {o.data.institutions.length === 0 ? <Empty title="No institutions yet" action={<Link className="btn primary" to="/app/institutions?new=1">Add institution</Link>}>Add an institution and upload its documents to start.</Empty> : (
