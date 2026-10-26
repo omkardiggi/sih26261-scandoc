@@ -165,193 +165,29 @@ export default function Landing() {
     <div className="landing-wrap" ref={containerRef}>
       <PublicNav />
 
-      {/* Hero Section */}
+      {/* Hero Section - Clean, Minimalist & Centered */}
       <section className="hero-glass-section">
-        <div className="hero-glass-inner">
-          <div className="scroll-reveal delay-1">
-            <div className="hero-badge-pill">
-              <span className="pulse-dot" />
-              <span>AICTE Authorized Officer Workspace</span>
-            </div>
-            <h1 className="hero-title-main">
-              Verify Institutions on <span className="gradient-text">Cryptographic Evidence</span>, Not Assumptions.
-            </h1>
-            <p className="hero-desc">
-              A secure, air-gapped platform to examine submitted institutional documents, detect digital tampering, cross-validate claims with official regulatory registries, and record decisions with an immutable audit trail.
-            </p>
-            <div className="hero-ctas">
-              <Link className="btn-glass-primary" to="/login">
-                Access Officer Workspace <ArrowRight size={17} />
-              </Link>
-              <a className="btn-glass-secondary" href="#workflow">
-                Explore Workflow
-              </a>
-              <Link className="btn-glass-secondary" to="/signup">
-                Create Account
-              </Link>
-            </div>
+        <div className="hero-clean-centered scroll-reveal delay-1">
+          <div className="hero-badge-pill">
+            <span className="pulse-dot" />
+            <span>AICTE Authorized Officer Workspace</span>
           </div>
-
-          {/* Interactive Hero Verification Sandbox Window */}
-          <div className="hero-mockup-wrap scroll-reveal delay-2">
-            <div className="hero-mockup-window">
-              <div className="mockup-header">
-                <div className="mockup-dots">
-                  <span />
-                  <span />
-                  <span />
-                </div>
-                <div className="row" style={{ gap: 8 }}>
-                  <span className="tiny mono muted">LIVE EVIDENCE INSPECTOR</span>
-                  <span className="mockup-badge-live">VERIFIED</span>
-                </div>
-              </div>
-
-              <div className="mockup-case-info">
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: 13.5, color: "var(--text)" }}>Case #IVP-2026-0842</div>
-                  <div className="tiny muted">St. Vincent Institute of Engineering · Academic Year 2024-25</div>
-                </div>
-                <span className="badge ok">Ready for Decision</span>
-              </div>
-
-              {/* Interactive Tabs */}
-              <div className="mockup-tabs">
-                <button
-                  type="button"
-                  className={`mockup-tab-btn ${activeTab === "extraction" ? "active" : ""}`}
-                  onClick={() => setActiveTab("extraction")}
-                >
-                  1. Extraction
-                </button>
-                <button
-                  type="button"
-                  className={`mockup-tab-btn ${activeTab === "registry" ? "active" : ""}`}
-                  onClick={() => setActiveTab("registry")}
-                >
-                  2. Registry
-                </button>
-                <button
-                  type="button"
-                  className={`mockup-tab-btn ${activeTab === "integrity" ? "active" : ""}`}
-                  onClick={() => setActiveTab("integrity")}
-                >
-                  3. Integrity
-                </button>
-                <button
-                  type="button"
-                  className={`mockup-tab-btn ${activeTab === "inspection" ? "active" : ""}`}
-                  onClick={() => setActiveTab("inspection")}
-                >
-                  4. Vision AI
-                </button>
-              </div>
-
-              <div className="mockup-body">
-                {activeTab === "extraction" && (
-                  <div className="inspection-card anim-pop-in">
-                    <div className="row between">
-                      <div className="row" style={{ gap: 6, fontWeight: 650, fontSize: 13 }}>
-                        <FileText size={15} style={{ color: "#5483B3" }} />
-                        Land Ownership Deed (Page 3, Line 14)
-                      </div>
-                      <span className="confidence-chip">99.4% OCR Confidence</span>
-                    </div>
-                    <div className="inspection-field-row">
-                      <span className="muted">Total Campus Land Area</span>
-                      <strong style={{ color: "var(--text)" }}>5.24 Acres (21,205 sq. m)</strong>
-                    </div>
-                    <div className="inspection-field-row">
-                      <span className="muted">Survey / Khasra Identification</span>
-                      <span className="mono" style={{ color: "var(--text)" }}>SY-402/1A & 402/1B</span>
-                    </div>
-                    <div className="inspection-field-row">
-                      <span className="muted">Extracted Validity</span>
-                      <span className="badge ok">Perpetual Freehold · Registered</span>
-                    </div>
-                  </div>
-                )}
-
-                {activeTab === "registry" && (
-                  <div className="inspection-card anim-pop-in">
-                    <div className="row between">
-                      <div className="row" style={{ gap: 6, fontWeight: 650, fontSize: 13 }}>
-                        <Database size={15} style={{ color: "#7DA0CA" }} />
-                        Regulatory Portal Baseline Cross-Check
-                      </div>
-                      <span className="badge ok">Official Portal Match</span>
-                    </div>
-                    <div className="inspection-field-row">
-                      <span className="muted">Approved Engineering Intake</span>
-                      <strong style={{ color: "var(--text)" }}>240 Students / Year</strong>
-                    </div>
-                    <div className="inspection-field-row">
-                      <span className="muted">Handbook Clause Compliance</span>
-                      <span style={{ color: "var(--text)" }}>APH 2024-27 §1.1 (Met in full)</span>
-                    </div>
-                    <div className="inspection-field-row">
-                      <span className="muted">Discrepancy Status</span>
-                      <span className="badge ok">0 Contradictions Found</span>
-                    </div>
-                  </div>
-                )}
-
-                {activeTab === "integrity" && (
-                  <div className="inspection-card anim-pop-in">
-                    <div className="row between">
-                      <div className="row" style={{ gap: 6, fontWeight: 650, fontSize: 13 }}>
-                        <Fingerprint size={15} style={{ color: "#5483B3" }} />
-                        Forensic Cryptographic Analysis
-                      </div>
-                      <span className="badge ok">Certificate Valid</span>
-                    </div>
-                    <div className="inspection-field-row">
-                      <span className="muted">Digital Signature (pyHanko)</span>
-                      <strong style={{ color: "var(--text)" }}>Signer: Sub-Registrar Authority (Valid)</strong>
-                    </div>
-                    <div className="inspection-field-row">
-                      <span className="muted">SHA-256 File Immutability</span>
-                      <span className="mono tiny" style={{ color: "var(--text)" }}>e3b0c44298fc1c149afbf4c8996fb92427ae...</span>
-                    </div>
-                    <div className="inspection-field-row">
-                      <span className="muted">Hidden Text & Forgery Layers</span>
-                      <span className="badge ok">0 Hidden Glyphs · Clean PDF</span>
-                    </div>
-                  </div>
-                )}
-
-                {activeTab === "inspection" && (
-                  <div className="inspection-card anim-pop-in">
-                    <div className="row between">
-                      <div className="row" style={{ gap: 6, fontWeight: 650, fontSize: 13 }}>
-                        <Cpu size={15} style={{ color: "#5483B3" }} />
-                        Computer Center & Lab Inspection AI
-                      </div>
-                      <span className="badge ok">Criteria Satisfied</span>
-                    </div>
-                    <div className="inspection-field-row">
-                      <span className="muted">Workstations Counted by Model</span>
-                      <strong style={{ color: "var(--text)" }}>48 Configured Terminal Benches</strong>
-                    </div>
-                    <div className="inspection-field-row">
-                      <span className="muted">Infrastructure Defect Scan</span>
-                      <span className="badge ok">0 Cracks · 0 Water Damage</span>
-                    </div>
-                    <div className="inspection-field-row">
-                      <span className="muted">Officer Frame Assessment</span>
-                      <span className="badge ok">Officer Confirmed & Signed</span>
-                    </div>
-                  </div>
-                )}
-
-                <div className="row between" style={{ marginTop: 12, fontSize: 11.5 }}>
-                  <span className="muted">Click tabs above to preview verification dimensions</span>
-                  <span className="row" style={{ gap: 4, color: "#5483B3", fontWeight: 600 }}>
-                    <Eye size={12} /> Live Interactive Preview
-                  </span>
-                </div>
-              </div>
-            </div>
+          <h1 className="hero-title-main hero-title-centered">
+            Verify Institutions on <span className="gradient-text">Cryptographic Evidence</span>, Not Assumptions.
+          </h1>
+          <p className="hero-desc hero-desc-centered">
+            A secure, air-gapped platform to examine submitted institutional documents, detect digital tampering, cross-validate claims with official regulatory registries, and record decisions with an immutable audit trail.
+          </p>
+          <div className="hero-ctas hero-ctas-centered">
+            <Link className="btn-glass-primary" to="/login">
+              Access Officer Workspace <ArrowRight size={17} />
+            </Link>
+            <a className="btn-glass-secondary" href="#inspector-console">
+              Explore Live Inspector
+            </a>
+            <Link className="btn-glass-secondary" to="/signup">
+              Create Account
+            </Link>
           </div>
         </div>
       </section>
@@ -371,6 +207,180 @@ export default function Landing() {
               <span className="metric-sub">{m.sub}</span>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* Dedicated Interactive Evidence Inspector Section (Appears on Scroll) */}
+      <section className="inspector-sandbox-section" id="inspector-console">
+        <div className="section-header-center scroll-reveal">
+          <div className="hero-badge-pill" style={{ marginBottom: 14 }}>
+            <FileText size={13} /> Interactive Verification Console
+          </div>
+          <h2>Deterministic Evidence Inspector</h2>
+          <p>
+            Examine our multi-dimensional verification engine in real time. Switch between OCR spatial coordinates, official regulatory baselines, pyHanko cryptographic integrity seals, and lab vision benchmarks.
+          </p>
+        </div>
+
+        <div className="inspector-console-wrapper scroll-reveal delay-2">
+          <div className="inspector-console-window glass-panel">
+            <div className="mockup-header">
+              <div className="mockup-dots">
+                <span />
+                <span />
+                <span />
+              </div>
+              <div className="row" style={{ gap: 10 }}>
+                <span className="tiny mono muted">REGULATORY EVIDENCE CONSOLE · V4.2</span>
+                <span className="mockup-badge-live">VERIFIED FORENSIC RECORD</span>
+              </div>
+            </div>
+
+            <div className="mockup-case-info">
+              <div>
+                <div style={{ fontWeight: 700, fontSize: 14.5, color: "var(--text)" }}>Docket #IVP-2026-0842 · St. Vincent Institute of Engineering</div>
+                <div className="tiny muted" style={{ marginTop: 2 }}>Approval Process Handbook 2024-25 · Affiliated to State Technological University</div>
+              </div>
+              <span className="badge ok">Ready for Officer Decision</span>
+            </div>
+
+            {/* Interactive Tabs */}
+            <div className="mockup-tabs">
+              <button
+                type="button"
+                className={`mockup-tab-btn ${activeTab === "extraction" ? "active" : ""}`}
+                onClick={() => setActiveTab("extraction")}
+              >
+                1. Spatial OCR Extraction
+              </button>
+              <button
+                type="button"
+                className={`mockup-tab-btn ${activeTab === "registry" ? "active" : ""}`}
+                onClick={() => setActiveTab("registry")}
+              >
+                2. Regulatory Registry Baseline
+              </button>
+              <button
+                type="button"
+                className={`mockup-tab-btn ${activeTab === "integrity" ? "active" : ""}`}
+                onClick={() => setActiveTab("integrity")}
+              >
+                3. Cryptographic Forensic Seal
+              </button>
+              <button
+                type="button"
+                className={`mockup-tab-btn ${activeTab === "inspection" ? "active" : ""}`}
+                onClick={() => setActiveTab("inspection")}
+              >
+                4. Vision AI Defect & Lab Count
+              </button>
+            </div>
+
+            <div className="mockup-body">
+              {activeTab === "extraction" && (
+                <div className="inspection-card anim-pop-in">
+                  <div className="row between">
+                    <div className="row" style={{ gap: 8, fontWeight: 650, fontSize: 13.5 }}>
+                      <FileText size={16} style={{ color: "var(--brand-2)" }} />
+                      Registered Land Title Deed (Document ID #DOC-LD-8821)
+                    </div>
+                    <span className="confidence-chip">99.4% OCR Confidence · Bounding Box Verified</span>
+                  </div>
+                  <div className="inspection-field-row">
+                    <span className="muted">Total Contiguous Campus Land Area</span>
+                    <strong style={{ color: "var(--text)" }}>5.24 Acres (21,205 sq. m) [Requirement: 5.0 Acres]</strong>
+                  </div>
+                  <div className="inspection-field-row">
+                    <span className="muted">Survey / Khasra Identification</span>
+                    <span className="mono" style={{ color: "var(--text)", fontWeight: 600 }}>SY-402/1A & SY-402/1B · Sub-District Registry Office</span>
+                  </div>
+                  <div className="inspection-field-row">
+                    <span className="muted">Tenure & Title Status</span>
+                    <span className="badge ok">Perpetual Freehold · Registered & Unencumbered</span>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === "registry" && (
+                <div className="inspection-card anim-pop-in">
+                  <div className="row between">
+                    <div className="row" style={{ gap: 8, fontWeight: 650, fontSize: 13.5 }}>
+                      <Database size={16} style={{ color: "var(--brand-2)" }} />
+                      Official Regulatory Registry Cross-Validation
+                    </div>
+                    <span className="badge ok">Official Portal Baseline Match</span>
+                  </div>
+                  <div className="inspection-field-row">
+                    <span className="muted">Authorized Annual Intake</span>
+                    <strong style={{ color: "var(--text)" }}>240 Engineering Undergraduates (B.Tech / B.E.)</strong>
+                  </div>
+                  <div className="inspection-field-row">
+                    <span className="muted">Handbook Clause Baseline Compliance</span>
+                    <span style={{ color: "var(--text)" }}>AICTE Approval Process Handbook §1.1 · Met in full</span>
+                  </div>
+                  <div className="inspection-field-row">
+                    <span className="muted">Contradiction & Anomaly Detection</span>
+                    <span className="badge ok">0 Conflicting Registry Records Found</span>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === "integrity" && (
+                <div className="inspection-card anim-pop-in">
+                  <div className="row between">
+                    <div className="row" style={{ gap: 8, fontWeight: 650, fontSize: 13.5 }}>
+                      <Fingerprint size={16} style={{ color: "var(--brand-2)" }} />
+                      Forensic Cryptographic Signature & Byte Analysis
+                    </div>
+                    <span className="badge ok">Cryptographic Certificate Valid</span>
+                  </div>
+                  <div className="inspection-field-row">
+                    <span className="muted">Digital PDF Signature (pyHanko)</span>
+                    <strong style={{ color: "var(--text)" }}>Valid X.509 Certificate · State Land Authority Seal</strong>
+                  </div>
+                  <div className="inspection-field-row">
+                    <span className="muted">SHA-256 Digest Immutability</span>
+                    <span className="mono tiny" style={{ color: "var(--text)" }}>e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855</span>
+                  </div>
+                  <div className="inspection-field-row">
+                    <span className="muted">Steganography & Layer Forgery Check</span>
+                    <span className="badge ok">0 Injected Hidden Glyphs · Clean PDF Stream</span>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === "inspection" && (
+                <div className="inspection-card anim-pop-in">
+                  <div className="row between">
+                    <div className="row" style={{ gap: 8, fontWeight: 650, fontSize: 13.5 }}>
+                      <Cpu size={16} style={{ color: "var(--brand-2)" }} />
+                      Vision AI Facility & Computer Lab Inspection
+                    </div>
+                    <span className="badge ok">Statutory Norms Met</span>
+                  </div>
+                  <div className="inspection-field-row">
+                    <span className="muted">Workstations Counted via Object Detection</span>
+                    <strong style={{ color: "var(--text)" }}>48 Configured Terminal Benches [Norm: 40 Benches]</strong>
+                  </div>
+                  <div className="inspection-field-row">
+                    <span className="muted">Physical Infrastructure Integrity</span>
+                    <span className="badge ok">0 Structural Cracks · 0 Water Leakage Damage</span>
+                  </div>
+                  <div className="inspection-field-row">
+                    <span className="muted">Officer Frame Verification Assessment</span>
+                    <span className="badge ok">Geo-Tagged & Timestamped · Signed by Inspecting Officer</span>
+                  </div>
+                </div>
+              )}
+
+              <div className="row between" style={{ marginTop: 14, fontSize: 12 }}>
+                <span className="muted">Deterministic evidence telemetry verified in 0.84s across 4 isolated verification engines</span>
+                <span className="row" style={{ gap: 6, color: "var(--brand-2)", fontWeight: 650 }}>
+                  <Eye size={13} /> Official Evidence Inspector
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -397,7 +407,7 @@ export default function Landing() {
               <div className="feature-points">
                 {cap.bullets.map((b) => (
                   <span key={b}>
-                    <CheckCircle2 size={13} style={{ color: "#5483B3" }} />
+                    <CheckCircle2 size={13} style={{ color: "var(--brand-2)" }} />
                     {b}
                   </span>
                 ))}
