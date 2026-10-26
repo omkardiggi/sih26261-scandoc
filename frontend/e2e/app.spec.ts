@@ -7,8 +7,8 @@ const SECTIONS = ["Dashboard", "Institutions", "Institution Verifier", "Inspecti
 async function login(page) {
   await page.goto("/login");
   await page.getByLabel("Email").fill(EMAIL);
-  await page.getByLabel("Password").fill(PASSWORD);
-  await page.getByRole("button", { name: "Sign in" }).click();
+  await page.getByLabel("Password", { exact: true }).fill(PASSWORD);
+  await page.getByRole("button", { name: "Log in" }).click();
   await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
 }
 
@@ -21,7 +21,7 @@ test("landing page is public and protected routes redirect", async ({ page }) =>
 
 test("anyone can sign up with their own email and is signed in", async ({ page }) => {
   await page.goto("/login");
-  await page.getByRole("link", { name: "Create an account" }).click();
+  await page.getByRole("link", { name: "Sign up" }).click();
   await expect(page.getByRole("heading", { name: "Create your account" })).toBeVisible();
   await page.getByLabel("Full name").fill("Synthetic Signup Tester");
   await page.getByLabel("Email").fill(`synthetic.signup.${Date.now()}@gmail.com`);
