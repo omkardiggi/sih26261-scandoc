@@ -11,11 +11,11 @@ const STATE: Record<string, [string, string]> = {
   missing: ["Documents missing", "missing"], checking: ["Analysing…", "checking"], empty: ["No documents", "none"], decided: ["Decision recorded", "looks_correct"],
 };
 const RESULT_BARS = [
-  { key: "verified", label: "Verified", color: "#48252F" },
-  { key: "looks_correct", label: "Checks passed", color: "#857861" },
-  { key: "review", label: "Needs review", color: "#9C6615" },
-  { key: "problem", label: "Problem", color: "#9E2A2B" },
-  { key: "checking", label: "Analysing", color: "#6B6152" },
+  { key: "verified", label: "Verified", color: "var(--chart-verified)" },
+  { key: "looks_correct", label: "Checks passed", color: "var(--chart-passed)" },
+  { key: "review", label: "Needs review", color: "var(--chart-review)" },
+  { key: "problem", label: "Problem", color: "var(--chart-problem)" },
+  { key: "checking", label: "Analysing", color: "var(--chart-analysing)" },
 ];
 
 function Stat({ label, value, icon: Icon, tone = "neutral", to }: { label: string; value: number; icon: any; tone?: "brand" | "pass" | "fail" | "warn" | "accent" | "info" | "neutral"; to?: string }) {
