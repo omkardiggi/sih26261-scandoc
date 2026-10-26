@@ -27,6 +27,7 @@ from .secrets import resolve_secret
 
 DEFAULT_QR_HOSTS = ["approvalstatus.aicte.gov.in"]
 QR_PATH_PREFIX = "/api/getInstituteDetails/"
+DEFAULT_GOV_SUFFIXES = [".gov.in", ".nic.in"]
 
 
 @dataclass
@@ -130,6 +131,34 @@ def parse_aicte_status_page(html_text: str) -> dict:
         for c in courses if course_col
     ]
     return {"title": title, "fields": fields, "courses": norm_courses, "intake_column": intake_col}
+
+
+KNOWN_ISSUERS = {  # host suffix -> issuing body, for naming where a QR code leads
+    "aicte.gov.in": "AICTE", "aicte-india.org": "AICTE", "fssai.gov.in": "FSSAI (food safety)",
+    "digilocker.gov.in": "DigiLocker", "gst.gov.in": "GST Network", "incometax.gov.in": "Income Tax Department",
+    "ugc.gov.in": "UGC", "naac.gov.in": "NAAC", "nba.org.in": "NBA", "cbse.gov.in": "CBSE",
+    "fireservices.ap.gov.in": "A.P. Fire Services", "cpcb.nic.in": "Central Pollution Control Board",
+}
+
+
+def link_source(url: str) -> dict:
+    """Where a QR link leads and whether it is an official government address (no network access)."""
+    parts = urlsplit(url)
+    host = (parts.hostname or "").lower()
+    issuer = next((name for sfx, name in KNOWN_ISSUERS.items() if host == sfx or host.endswith("." + sfx)), None)
+    gov = any(host.endswith(sfx) and len(host) > len(sfx) for sfx in DEFAULT_GOV_SUFFIXES)
+    secure = parts.scheme == "https" and not parts.username and parts.port in (None, 443)
+    if host in DEFAULT_QR_HOSTS and secure:
+        official, reason = True, "AICTE's own approval-status portal"
+    elif gov and secure:
+        official, reason = True, "an Indian government website (.gov.in / .nic.in)"
+    elif gov:
+        official, reason = False, "a government address, but not over a secure (https) connection"
+    elif not host:
+        official, reason = False, "not a web address"
+    else:
+        official, reason = False, "not a government website"
+    return {"url": url, "host": host or None, "issuer": issuer or (host or None), "official": official, "reason": reason}
 
 
 def qr_allowed(url: str, integration: Integration) -> bool:
@@ -381,7 +410,6 @@ def test_rest(integration: Integration) -> tuple[bool, str, int | None, int | No
 
 # ---------------------------------------------------------------- generic issuer QR pages (official government hosts)
 
-DEFAULT_GOV_SUFFIXES = [".gov.in", ".nic.in"]
 IDENTIFIER_FIELDS = ("certificate_number", "reference_number", "application_id", "aicte_permanent_id")
 
 
@@ -417,16 +445,34 @@ def _compact(s: str) -> str:
     return re.sub(r"[^a-z0-9]", "", s.lower())
 
 
-def verify_generic_qr(integration: Integration, url: str, doc_fields: dict) -> VerificationOutcome:
+def qr_numbers(url: str) -> list[str]:
+    """Record numbers carried in a QR link (licence, certificate, receipt or application numbers in its path or query)."""
+    parts = urlsplit(url)
+    return list(dict.fromkeys(re.findall(r"(?<![0-9])[0-9]{6,20}(?![0-9])", f"{parts.path} {parts.query}")))
+
+
+def verify_generic_qr(integration: Integration, url: str, doc_fields: dict, *, doc_text: str = "",
+                      institution_name: str | None = None) -> VerificationOutcome:
     """Fetch an issuer verification page linked by the document's QR code and check which document values it shows.
 
+    Every QR link is also checked against the document itself: the record number inside the link must be printed on
+    the document, otherwise the QR may have been copied from another certificate.
     This proves presence, not absence: values missing from the page lead to 'unable to verify', never to a mismatch,
     because the page layout is unknown (it may need JavaScript, a captcha or show only part of the record).
     """
     from ..documents.normalize import parse_date, DATE_ANY_RE
 
     host = urlsplit(url).hostname
-    name = f"Issuer verification page ({host})"
+    issuer = link_source(url)["issuer"]
+    name = f"Issuer verification page — {issuer}" if issuer and issuer != host else f"Issuer verification page ({host})"
+    doc_compact = _compact(doc_text)
+    nums = qr_numbers(url)
+    on_doc = [n for n in nums if n in doc_compact]
+    link_note = ""
+    if nums and doc_compact:
+        link_note = (f" The record number in the QR ({', '.join(on_doc)}) is printed on the document, so the QR belongs to it." if on_doc else
+                     f" The record number in the QR ({', '.join(nums)}) is NOT printed on the document — the QR may belong to another certificate.")
+    copied = bool(nums and doc_compact and not on_doc)
     if not generic_qr_allowed(url, integration):
         return VerificationOutcome("unable_to_verify", f"The QR link points to {host}, which is not an allowlisted official government address, so it was not opened.",
                                    "Verify through the issuer's official website directly. A QR code pointing to an unexpected address may itself be a concern.",
@@ -440,24 +486,34 @@ def verify_generic_qr(integration: Integration, url: str, doc_fields: dict) -> V
                                    source_name=name, source_url=url, connection_ok=False)
     base = dict(http_status=resp.status_code, duration_ms=resp.duration_ms, source_name=name, source_url=url, response_body=resp.body,
                 response_content_type=resp.headers.get("content-type"), request_summary={"method": "GET", "url": url})
+    qr_check = {"qr_record_number": {"document": ", ".join(on_doc) or "not printed on the document", "official": ", ".join(nums),
+                                     "match": bool(on_doc)}} if nums and doc_compact else {}
+    copy_next = "Ask the institution for the original certificate; a QR from another certificate is a sign of a reused or fake document."
     if resp.status_code == 404:
-        return VerificationOutcome("not_found", "The issuer page reports that the record does not exist (HTTP 404).",
-                                   "Treat as unverified and confirm with the issuing office.", connection_ok=True, **base)
+        return VerificationOutcome("not_found", "The issuer page reports that the record does not exist (HTTP 404)." + link_note,
+                                   "Treat as unverified and confirm with the issuing office.", connection_ok=True, matched_values=qr_check, **base)
     if resp.status_code != 200:
-        return VerificationOutcome("error", f"The issuer page returned HTTP {resp.status_code}.", "Open the link manually.", connection_ok=False, **base)
+        return VerificationOutcome("error", f"The issuer page returned HTTP {resp.status_code}." + link_note, "Open the link manually.",
+                                   connection_ok=False, matched_values=qr_check, **base)
     text = _page_text(resp.body, resp.headers.get("content-type"))
-    if len(text.strip()) < 40:
-        return VerificationOutcome("unable_to_verify", "The issuer page has no readable content here (it may need JavaScript or a captcha).",
-                                   "Open the link in a browser, check it, and record the result with a screenshot.", connection_ok=True, **base)
+    js_only = len(text.strip()) < 300 and ("javascript" in text.lower() or re.search(rb"<app-root|<div id=\"(root|app)\"></div>", resp.body[:200_000]))
+    if len(text.strip()) < 40 or js_only:
+        return VerificationOutcome("unable_to_verify", f"The official {issuer} site was reached, but its record is shown only in a browser "
+                                   "(JavaScript), so it could not be read automatically." + link_note,
+                                   copy_next if copied else "Open the link in a browser, check it, and record the result with a screenshot.",
+                                   connection_ok=True, matched_values=qr_check, **base)
     page_compact = _compact(text)
     page_dates = {d.isoformat() for m in DATE_ANY_RE.finditer(text) if (d := parse_date(m.group(0))[0])}
-    matched: dict[str, dict] = {}
+    matched: dict[str, dict] = dict(qr_check)
     for key in IDENTIFIER_FIELDS:
         v = doc_fields.get(key)
         if v and len(_compact(v)) >= 4:
             matched[key] = {"document": v, "official": "shown on issuer page" if _compact(v) in page_compact else "not found on page",
                             "match": _compact(v) in page_compact}
-    nm = doc_fields.get("institution_name")
+    for n in on_doc:  # the QR's record number is printed on the document: the issuer page should show it too
+        matched.setdefault("certificate_number", {"document": n, "official": "shown on issuer page" if n in page_compact else "not found on page",
+                                                  "match": n in page_compact})
+    nm = doc_fields.get("institution_name") or institution_name
     if nm:
         words = [w for w in normalize_name(nm).split() if len(w) > 2]
         page_norm = normalize_name(text)
@@ -471,13 +527,15 @@ def verify_generic_qr(integration: Integration, url: str, doc_fields: dict) -> V
             matched[key] = {"document": v, "official": "shown on issuer page" if ok else "not found on page", "match": ok}
     ids = [k for k in IDENTIFIER_FIELDS if k in matched]
     if not ids:
-        return VerificationOutcome("unable_to_verify", "The document has no certificate or reference number to look for on the issuer page.",
-                                   "Check the page manually and record the result.", connection_ok=True, matched_values=matched, **base)
-    if any(matched[k]["match"] for k in ids) and all(v["match"] for k, v in matched.items() if k in ("institution_name",) + IDENTIFIER_FIELDS):
-        shown = ", ".join(k.replace("_", " ") for k, v in matched.items() if v["match"])
-        return VerificationOutcome("verified", f"The official issuer page ({host}) shows the document's {shown}.", connection_ok=True,
+        return VerificationOutcome("unable_to_verify", "The document has no certificate or reference number to look for on the issuer page." + link_note,
+                                   copy_next if copied else "Check the page manually and record the result.", connection_ok=True,
+                                   matched_values=matched, **base)
+    if not copied and any(matched[k]["match"] for k in ids) and all(v["match"] for k, v in matched.items() if k in ("institution_name",) + IDENTIFIER_FIELDS):
+        shown = ", ".join(k.replace("_", " ") for k, v in matched.items() if v["match"] and k != "qr_record_number")
+        return VerificationOutcome("verified", f"The official {issuer} page ({host}) shows the document's {shown}." + link_note, connection_ok=True,
                                    matched_values=matched, **base)
     missing = ", ".join(k.replace("_", " ") for k, v in matched.items() if not v["match"])
-    return VerificationOutcome("unable_to_verify", f"The issuer page was reached, but these document values were not found on it: {missing}.",
+    return VerificationOutcome("unable_to_verify", f"The issuer page was reached, but these document values were not found on it: {missing}." + link_note,
+                               copy_next if copied else
                                "Open the link and compare manually; if the page shows different details, record a mismatch with a screenshot.",
                                connection_ok=True, matched_values=matched, **base)

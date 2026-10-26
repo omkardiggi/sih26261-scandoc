@@ -142,13 +142,20 @@ def official_verification_job(ctx: JobContext) -> dict:
         claim, programs = document_claim(db, doc)
         adapter = integration.adapter
         integration_snapshot = (integration.id, adapter)
+        doc_text, inst_name = "", None
+        if adapter == "issuer_qr_generic":
+            from ..models import Institution, TextBlock
+
+            doc_text = "\n".join(t for (t,) in db.execute(select(TextBlock.text).where(TextBlock.version_id == doc.current_version_id)))
+            inst = db.get(Institution, doc.institution_id)
+            inst_name = inst.name if inst else None
     # Network call happens outside any open transaction.
     with session_scope() as db:
         integration = db.get(Integration, integration_snapshot[0])
         if adapter == "aicte_qr_status":
             outcome = verify_via_qr(integration, p["qr_url"], claim, programs)
         elif adapter == "issuer_qr_generic":
-            outcome = verify_generic_qr(integration, p["qr_url"], claim)
+            outcome = verify_generic_qr(integration, p["qr_url"], claim, doc_text=doc_text, institution_name=inst_name)
         else:
             outcome = verify_rest(integration, p["claim_type"], claim)
         doc = db.get(Document, p["document_id"])

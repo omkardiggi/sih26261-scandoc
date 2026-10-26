@@ -1008,7 +1008,7 @@ def check_codes(data: bytes, detected_type: str, ex: ExtractionResult, fields: l
     if detected_type == "pdf":
         doc = pymupdf.open(stream=data, filetype="pdf")
         try:
-            for i in range(min(doc.page_count, 5)):
+            for i in range(min(doc.page_count, 30)):
                 page = doc.load_page(i)
                 pix = page.get_pixmap(matrix=pymupdf.Matrix(200 / 72, 200 / 72), alpha=False, colorspace=pymupdf.csRGB)
                 arr = np.frombuffer(pix.samples, dtype=np.uint8).reshape(pix.height, pix.width, 3)
@@ -1018,7 +1018,7 @@ def check_codes(data: bytes, detected_type: str, ex: ExtractionResult, fields: l
         finally:
             doc.close()
     else:
-        for p in ex.pages[:5]:
+        for p in ex.pages[:30]:
             if p.analysis_image is not None:
                 codes += [{"page_no": p.page_no, **c} for c in _decode_codes(p.analysis_image)]
     if not codes:
@@ -1041,15 +1041,29 @@ def check_codes(data: bytes, detected_type: str, ex: ExtractionResult, fields: l
         elif any(v and len(str(v)) >= 6 and str(v).lower() in content.lower() for v in known.values()):
             cmp["result"] = "Some extracted values appear in the code content."
         else:
-            cmp["result"] = "The code content could not be matched to extracted fields."
+            cmp["result"] = "No document value was found inside the code itself."
         if urls:
-            cmp["note"] = "Links are shown for manual checking and are never opened automatically."
+            from ..integrations.official import link_source
+
+            src = link_source(urls[0])
+            cmp["source"] = src
+            if src["official"]:
+                cmp["result"] += (f" It links to {src['issuer']} ({src['host']}), {src['reason']}; the record there is fetched "
+                                  "and compared with the document.")
+            else:
+                cmp["result"] += (f" It links to {src['host'] or 'an unknown address'}, which is {src['reason']}, so it was not "
+                                  "opened. A QR code on an official document should lead to the issuer's official site.")
+                if level != "high":
+                    level = "medium"
         comparisons.append(cmp)
-    status = "warning" if level == "high" else "info"
+    status = "warning" if level in ("high", "medium") else "info"
     return Check("qr_barcode", "issuer_identity", status, "QR codes and barcodes",
                  f"{len(codes)} code(s) decoded. " + " ".join(c["result"] for c in comparisons),
                  {"codes": comparisons, "significance": level},
-                 [{"type": "page", "page_no": c["page_no"], "bbox": c.get("bbox"), "note": c["type"]} for c in codes]), codes
+                 [{"type": "page", "page_no": c["page_no"], "bbox": c.get("bbox"), "note": c["type"],
+                   **({"url": cmp["source"]["url"], "host": cmp["source"]["host"], "issuer": cmp["source"]["issuer"],
+                       "official": cmp["source"]["official"]} if cmp.get("source") else {})}
+                  for c, cmp in zip(codes, comparisons)]), codes
 
 
 def issuer_source_check() -> Check:

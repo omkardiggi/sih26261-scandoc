@@ -337,9 +337,13 @@ def rule_duplicate(ctx: ValidationContext) -> list[RuleResult]:
         return [RuleResult("duplicate_file", "File is not a duplicate", "duplicate", "pass",
                            "No previously uploaded file has the same SHA-256 hash.")]
     d = ctx.duplicate_of
+    if d.get("other_institution"):
+        return [RuleResult("duplicate_file", "File is not a duplicate", "duplicate", "fail",
+                           f"This exact file (same SHA-256) was already submitted by {d.get('other_institution_name') or 'a different institution'} "
+                           f"as '{d['title']}' on {d['uploaded_at']}. One institution's document is being reused for another.",
+                           d, [{"type": "document", "document_id": d["document_id"]}])]
     return [RuleResult("duplicate_file", "File is not a duplicate", "duplicate", "warning",
-                       f"An identical file (same SHA-256) was already uploaded as '{d['title']}' on {d['uploaded_at']}"
-                       + (" for a different institution." if d.get("other_institution") else "."),
+                       f"An identical file (same SHA-256) was already uploaded as '{d['title']}' on {d['uploaded_at']}.",
                        d, [{"type": "document", "document_id": d["document_id"]}])]
 
 

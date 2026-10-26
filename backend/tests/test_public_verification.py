@@ -53,6 +53,25 @@ def test_generic_issuer_page_refuses_non_government_hosts():
         _reset()
 
 
+def test_qr_record_number_must_be_printed_on_the_document():
+    from app.integrations.official import link_source, qr_numbers, verify_generic_qr
+
+    url = "https://licence.example.gov.in/display/105780719/LIC"
+    assert qr_numbers(url) == ["105780719"]
+    assert link_source(url)["official"] and not link_source("https://licence.example.com/105780719")["official"]
+    page = "<html><body><p>Licence 105780719 issued to SYNTHETIC INSTITUTE OF TECHNOLOGY, canteen, valid till 2027</p></body></html>"
+    _transport(lambda req: httpx.Response(200, text=page, headers={"content-type": "text/html"}))
+    try:
+        ok = verify_generic_qr(_generic(), url, {}, doc_text="FSSAI Licence No. 105780719\nSynthetic Institute of Technology",
+                               institution_name="Synthetic Institute of Technology")
+        assert ok.outcome == "verified" and ok.matched_values["qr_record_number"]["match"]
+        copied = verify_generic_qr(_generic(), url, {}, doc_text="FSSAI Licence No. 999999999\nSynthetic Institute of Technology",
+                                   institution_name="Synthetic Institute of Technology")
+        assert copied.outcome == "unable_to_verify" and "NOT printed on the document" in copied.reason
+    finally:
+        _reset()
+
+
 def test_cca_india_trust_roots_are_loaded():
     from app.documents.integrity import _load_trust_roots
 

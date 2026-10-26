@@ -205,8 +205,10 @@ def process_document_version(ctx: JobContext) -> dict:
             ov = db.get(DocumentVersion, v.duplicate_of_version_id)
             od = db.get(Document, ov.document_id) if ov else None
             if od:
+                oi = db.get(Institution, od.institution_id)
                 dup = {"document_id": od.id, "version_id": ov.id, "title": od.title,
-                       "uploaded_at": ov.uploaded_at.date().isoformat(), "other_institution": od.institution_id != doc.institution_id}
+                       "uploaded_at": ov.uploaded_at.date().isoformat(), "other_institution": od.institution_id != doc.institution_id,
+                       "other_institution_name": oi.name if oi and od.institution_id != doc.institution_id else None}
 
         category = db.get(DocumentCategory, doc.category_key) if doc.category_key else None
         registry_programs = db.execute(select(Program).where(Program.institution_id == inst.id)).scalars().all()
@@ -276,17 +278,17 @@ def process_document_version(ctx: JobContext) -> dict:
                      after={"status": doc.status, "category": doc.category_key, "pages": v.page_count,
                             "fields": len(fx.fields), "ocr_used": v.ocr_used},
                      evidence=[{"type": "document_version", "id": v.id, "sha256": v.sha256}])
-        # Verify automatically through the issuer page linked by the document's QR code (official hosts only).
+        # Verify automatically through every issuer page linked by the document's QR codes (official hosts only).
         from ..api.documents import _qr_route
+        from ..security.crypto import sha256_hex
         from ..verification.jobs import qr_links
 
-        for url in qr_links(db, doc):
+        for url in dict.fromkeys(qr_links(db, doc)):
             integ, claim_type = _qr_route(db, url)
             if integ is not None:
                 enqueue(db, "official_verification", {"document_id": doc.id, "integration_id": integ.id, "claim_type": claim_type, "qr_url": url},
-                        idempotency_key=f"qr:{v.id}", entity_type="document", entity_id=doc.id, institution_id=inst.id,
-                        created_by_id=ctx.created_by_id, priority=40, max_attempts=2)
-                break
+                        idempotency_key=f"qr:{v.id}:{sha256_hex(url.encode())[:16]}", entity_type="document", entity_id=doc.id,
+                        institution_id=inst.id, created_by_id=ctx.created_by_id, priority=40, max_attempts=2)
         if doc.case_id:
             enqueue(db, "evaluate_case", {"case_id": doc.case_id}, entity_type="case", entity_id=doc.case_id,
                     institution_id=inst.id, created_by_id=ctx.created_by_id, priority=50)

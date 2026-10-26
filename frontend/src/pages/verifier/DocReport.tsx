@@ -92,6 +92,26 @@ function markTones(x: any): Record<string, string> {
   return out;
 }
 
+const GOV_HOST = /\.(gov|nic)\.in$/i;
+const QR_OUTCOME: Record<string, string> = { verified: "matches the official record", mismatch: "official record DIFFERS from the document",
+  not_found: "no record found at the official site", unable_to_verify: "could not be compared automatically", error: "official site could not be reached" };
+
+// Where a QR code leads, whether that is an official government site, and what the official check found.
+function qrMark(x: any, c: any, e: any, i: number): { label: string; value: string } {
+  const url: string | undefined = e.url || c.details?.codes?.[i]?.urls?.[0];
+  if (!url) return { label: "QR code", value: "No web link inside the code" };
+  let host = e.host;
+  let https = false;
+  try { const u = new URL(url); host ||= u.hostname; https = u.protocol === "https:"; } catch { /* not a URL */ }
+  const official = e.official ?? (GOV_HOST.test(host || "") && https);
+  const from = e.issuer && e.issuer !== host ? `${e.issuer} (${host})` : host || url;
+  if (!official) return { label: "QR code — NOT an official site", value: `Leads to ${from}; not opened` };
+  const att = (x.official_attempts || []).find((a: any) => a.source_url === url);
+  const num = att?.matched_values?.comparisons?.qr_record_number;
+  const belongs = num ? (num.match ? "; QR number is printed on the document" : "; QR number is NOT on the document — may be copied") : "";
+  return { label: "QR code — official site", value: `${from}: ${att ? QR_OUTCOME[att.outcome] || human(att.outcome) : "official check pending"}${belongs}` };
+}
+
 export function buildReportMarks(x: any): Mark[] {
   if (!x) return [];
   const tones = markTones(x);
@@ -109,9 +129,9 @@ export function buildReportMarks(x: any): Mark[] {
   }
   for (const c of x.integrity || []) {
     const sig = c.details?.significance;
-    for (const e of c.evidence || []) {
+    for (const [i, e] of (c.evidence || []).entries()) {
       if (!e.bbox || !e.page_no) continue;
-      if (c.check_type === "qr_barcode") out.push({ n: 0, label: "QR code", value: "Links to the issuer's record", page_no: e.page_no, boxes: [e.bbox], tone: "qr" });
+      if (c.check_type === "qr_barcode") out.push({ n: 0, ...qrMark(x, c, e, i), page_no: e.page_no, boxes: [e.bbox], tone: "qr" });
       else if (c.check_type === "ink_regions" && MARK_TONE[e.kind]) out.push({ n: 0, label: e.note, value: e.detail || MARK_VALUE[e.kind], page_no: e.page_no, boxes: [e.bbox], tone: MARK_TONE[e.kind] });
       else if (c.check_type === "ai_visual_analysis" && e.kind === "image_region") continue; // photographs are already marked
       else if (c.check_type === "ai_visual_analysis") out.push({ n: 0, label: e.note || "AI detection", value: KIND_WORD[e.kind] || "Located by the AI analysis", page_no: e.page_no, boxes: [e.bbox], tone: e.kind === "defect" ? "defect" : "vision" });
