@@ -22,6 +22,7 @@ import {
   ChevronRight
 } from "lucide-react";
 import { ThemeToggle } from "../../ui";
+import { BrandLogo } from "../../components/BrandLogo";
 
 // Custom hook to trigger scroll animations with IntersectionObserver
 function useScrollReveal() {
@@ -54,9 +55,7 @@ export function PublicNav() {
   return (
     <header className="public-nav-glass">
       <Link to="/" className="brand-link">
-        <span className="brand-logo-frame">
-          <img src="/logo.jpg" alt="Pixel Logo" className="brand-logo-img" />
-        </span>
+        <BrandLogo size={36} />
         <div className="brand-name-group">
           <span className="brand-logo-pixel">Pixel</span>
           <span className="brand-tagline">Verification Suite</span>
@@ -83,9 +82,7 @@ export function PublicFooter() {
       <div className="section-inner row between wrap" style={{ gap: 20 }}>
         <div className="stack sm">
           <div className="row" style={{ gap: 10, alignItems: "center" }}>
-            <span className="brand-logo-frame" style={{ width: 28, height: 28, borderRadius: 8 }}>
-              <img src="/logo.jpg" alt="Pixel Logo" className="brand-logo-img" />
-            </span>
+            <BrandLogo size={28} style={{ borderRadius: 8 }} />
             <span className="brand-logo-pixel" style={{ fontSize: 22 }}>Pixel</span>
             <span className="muted small" style={{ marginLeft: 6 }}>· Institutional Verification Platform</span>
           </div>
@@ -179,7 +176,7 @@ export default function Landing() {
           {/* Luminous Brand Spotlight Capsule */}
           <div className="hero-brand-capsule">
             <div className="hero-emblem-glow-ring">
-              <img src="/logo.jpg" alt="Pixel Emblem" className="hero-emblem-img" />
+              <BrandLogo size="100%" />
             </div>
             <div className="hero-brand-callout">
               <span className="brand-logo-pixel hero-pixel-script">Pixel</span>

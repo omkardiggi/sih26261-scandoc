@@ -5,6 +5,7 @@ import { api, useApi, usePoll } from "../api";
 import { useAuth } from "../auth";
 import { Button, fmtDate, ThemeToggle } from "../ui";
 import { AccountPanel, OfficersPanel } from "./SettingsPanels";
+import { BrandLogo } from "./BrandLogo";
 
 // Exactly five primary sections.
 export const NAV = [
@@ -78,9 +79,7 @@ export default function AppShell() {
     <div className={`shell ${collapsed ? "collapsed" : ""} ${mobileOpen ? "mobile-open" : ""}`}>
       <aside className="sidebar" aria-label="Primary">
         <div className="brand">
-          <span className="brand-mark" style={{ overflow: "hidden", padding: 0, border: "1px solid rgba(133, 120, 97, 0.35)", background: "#101211" }}>
-            <img src="/logo.jpg" alt="Pixel" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-          </span>
+          <BrandLogo size={32} style={{ borderRadius: 8, border: "1px solid rgba(133, 120, 97, 0.35)" }} />
           <span className="brand-text">
             <span className="brand-logo-pixel" style={{ fontSize: 22, lineHeight: 1 }}>Pixel</span>
             <span className="tiny muted" style={{ display: "block", fontSize: 9.5, letterSpacing: "0.04em", textTransform: "uppercase" }}>Verifier</span>

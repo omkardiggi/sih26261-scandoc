@@ -767,12 +767,17 @@ body { background: var(--bg) !important; }
   justify-content: center;
   background: #101211;
   flex: none;
+  position: relative;
 }
+.brand-logo-frame video,
+.brand-logo-frame img,
 .brand-logo-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
+  border-radius: inherit;
+  pointer-events: none;
 }
 .brand-name-group {
   display: flex;
@@ -865,9 +870,19 @@ body { background: var(--bg) !important; }
 .hero-brand-capsule:hover {
   transform: translateY(-2px);
 }
+@keyframes emblemAuraPulse {
+  0%, 100% {
+    box-shadow: 0 0 16px rgba(72, 37, 47, 0.45), 0 0 28px rgba(231, 212, 187, 0.15);
+    border-color: rgba(231, 212, 187, 0.45);
+  }
+  50% {
+    box-shadow: 0 0 24px rgba(72, 37, 47, 0.7), 0 0 38px rgba(231, 212, 187, 0.3);
+    border-color: rgba(231, 212, 187, 0.85);
+  }
+}
 .hero-emblem-glow-ring {
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   overflow: hidden;
   border: 1.5px solid rgba(231, 212, 187, 0.6);
@@ -877,6 +892,15 @@ body { background: var(--bg) !important; }
   display: flex;
   align-items: center;
   justify-content: center;
+  animation: emblemAuraPulse 4.5s ease-in-out infinite;
+}
+.hero-emblem-glow-ring .brand-logo-frame {
+  width: 100%;
+  height: 100%;
+  border: none;
+  box-shadow: none;
+  background: transparent;
+  border-radius: 50%;
 }
 .hero-emblem-img {
   width: 100%;
