@@ -1,19 +1,20 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, Building2, FileCheck2, Fingerprint, History, Lock, ScanSearch, ShieldCheck, Scale } from "lucide-react";
+import { ThemeToggle } from "../../ui";
 
 export function PublicNav() {
   return (
     <header className="public-nav">
       <Link to="/" className="row" style={{ color: "var(--text)", fontWeight: 650, textDecoration: "none" }}>
         <span className="brand-mark"><ShieldCheck size={17} /></span>
-        Institution Verification Platform
+        ScanDoc
       </Link>
       <nav aria-label="Site">
         <a href="/#capabilities">Capabilities</a>
         <a href="/#workflow">Workflow</a>
         <a href="/#security">Security</a>
       </nav>
-      <span className="row" style={{ gap: 8 }}><Link className="btn" to="/signup">Sign up</Link><Link className="btn primary" to="/login">Sign in</Link></span>
+      <span className="row wrap" style={{ gap: 8 }}><ThemeToggle /><Link className="btn" to="/signup">Sign up</Link><Link className="btn primary" to="/login">Log in</Link></span>
     </header>
   );
 }
@@ -22,7 +23,7 @@ export function PublicFooter() {
   return (
     <footer className="footer">
       <div className="section-inner row between wrap">
-        <span>Institution Verification Platform · Access is restricted to authorized officers.</span>
+        <span>ScanDoc · AICTE institution verification · Access is restricted to authorized officers.</span>
         <span className="row wrap" style={{ gap: 18 }}>
           <Link to="/privacy">Privacy</Link>
           <Link to="/terms">Terms of use</Link>
@@ -55,7 +56,7 @@ export default function Landing() {
               A secure workspace to manage institution records, examine submitted documents and inspection media, compare claims with official sources, and record decisions with a complete audit trail.
             </p>
             <div className="row wrap" style={{ marginTop: 28, gap: 12 }}>
-              <Link className="btn primary" style={{ height: 42, padding: "0 18px" }} to="/login">Sign in <ArrowRight size={16} /></Link>
+              <Link className="btn primary" style={{ height: 42, padding: "0 18px" }} to="/login">Log in <ArrowRight size={16} /></Link>
               <Link className="btn" style={{ height: 42, padding: "0 18px" }} to="/signup">Create an account</Link>
               <a className="btn" style={{ height: 42, padding: "0 18px" }} href="#workflow">How verification works</a>
             </div>

@@ -263,7 +263,7 @@ def build_document_report(db: Session, doc: Document, generated_by: str | None =
     _annotated_pages(db, doc, v, marks, out)
     out.insert_pdf(_html_pdf(_appendix_html(db, v)))
     _footer(out, f"{inst.name} - {doc.title}")
-    out.set_metadata({"title": f"Verification report - {doc.title}", "creator": "Institution Verification Platform"})
+    out.set_metadata({"title": f"Verification report - {doc.title}", "creator": "ScanDoc"})
     return out.tobytes(garbage=3, deflate=True)
 
 
@@ -303,7 +303,7 @@ def build_institution_report(db: Session, inst: Institution, generated_by: str |
         out.insert_pdf(_html_pdf(_doc_summary_html(db, doc, v, inst, marks)))
         _annotated_pages(db, doc, v, marks, out)
     _footer(out, inst.name)
-    out.set_metadata({"title": f"Verification report - {inst.name}", "creator": "Institution Verification Platform"})
+    out.set_metadata({"title": f"Verification report - {inst.name}", "creator": "ScanDoc"})
     return out.tobytes(garbage=3, deflate=True)
 
 
