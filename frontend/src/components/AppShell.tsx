@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Bell, Building2, ChevronsLeft, ClipboardCheck, FileSearch, LayoutDashboard, LogOut, Menu, ScanSearch, ShieldCheck, UserCog, Users } from "lucide-react";
+import { Bell, Building2, ChevronsLeft, ClipboardCheck, FileSearch, LayoutDashboard, LogOut, Menu, ScanSearch, UserCog, Users } from "lucide-react";
 import { api, useApi, usePoll } from "../api";
 import { useAuth } from "../auth";
 import { Button, fmtDate, ThemeToggle } from "../ui";
@@ -78,8 +78,13 @@ export default function AppShell() {
     <div className={`shell ${collapsed ? "collapsed" : ""} ${mobileOpen ? "mobile-open" : ""}`}>
       <aside className="sidebar" aria-label="Primary">
         <div className="brand">
-          <span className="brand-mark"><ShieldCheck size={17} /></span>
-          <span className="brand-text">Institution<br />Verification</span>
+          <span className="brand-mark" style={{ overflow: "hidden", padding: 0, border: "1px solid rgba(133, 120, 97, 0.35)", background: "#101211" }}>
+            <img src="/logo.jpg" alt="Pixel" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          </span>
+          <span className="brand-text">
+            <span className="brand-logo-pixel" style={{ fontSize: 22, lineHeight: 1 }}>Pixel</span>
+            <span className="tiny muted" style={{ display: "block", fontSize: 9.5, letterSpacing: "0.04em", textTransform: "uppercase" }}>Verifier</span>
+          </span>
         </div>
         <nav className="stack sm" style={{ gap: 2 }}>
           {NAV.map((n) => (

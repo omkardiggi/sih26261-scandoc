@@ -54,8 +54,13 @@ export function PublicNav() {
   return (
     <header className="public-nav-glass">
       <Link to="/" className="brand-link">
-        <span className="brand-gem"><ShieldCheck size={18} /></span>
-        <span>Institution Verification Platform</span>
+        <span className="brand-logo-frame">
+          <img src="/logo.jpg" alt="Pixel Logo" className="brand-logo-img" />
+        </span>
+        <div className="brand-name-group">
+          <span className="brand-logo-pixel">Pixel</span>
+          <span className="brand-tagline">Verification Suite</span>
+        </div>
       </Link>
       <nav aria-label="Main Navigation">
         <a href="#capabilities">Capabilities</a>
@@ -77,9 +82,12 @@ export function PublicFooter() {
     <footer className="footer-glass">
       <div className="section-inner row between wrap" style={{ gap: 20 }}>
         <div className="stack sm">
-          <div className="row" style={{ fontWeight: 700, color: "var(--text)" }}>
-            <span className="brand-gem" style={{ width: 24, height: 24 }}><ShieldCheck size={14} /></span>
-            Institution Verification Platform
+          <div className="row" style={{ gap: 10, alignItems: "center" }}>
+            <span className="brand-logo-frame" style={{ width: 28, height: 28, borderRadius: 8 }}>
+              <img src="/logo.jpg" alt="Pixel Logo" className="brand-logo-img" />
+            </span>
+            <span className="brand-logo-pixel" style={{ fontSize: 22 }}>Pixel</span>
+            <span className="muted small" style={{ marginLeft: 6 }}>· Institutional Verification Platform</span>
           </div>
           <span className="muted small">Restricted to authorized AICTE Officers · Cryptographic evidence verification engine.</span>
         </div>
@@ -165,29 +173,47 @@ export default function Landing() {
     <div className="landing-wrap" ref={containerRef}>
       <PublicNav />
 
-      {/* Hero Section - Clean, Minimalist & Centered */}
+      {/* Outstanding Hero Section with Pixel Brand Spotlight */}
       <section className="hero-glass-section">
         <div className="hero-clean-centered scroll-reveal delay-1">
-          <div className="hero-badge-pill">
-            <span className="pulse-dot" />
-            <span>AICTE Authorized Officer Workspace</span>
+          {/* Luminous Brand Spotlight Capsule */}
+          <div className="hero-brand-capsule">
+            <div className="hero-emblem-glow-ring">
+              <img src="/logo.jpg" alt="Pixel Emblem" className="hero-emblem-img" />
+            </div>
+            <div className="hero-brand-callout">
+              <span className="brand-logo-pixel hero-pixel-script">Pixel</span>
+              <span className="hero-badge-pill-inline">AICTE Authorized Verification Suite</span>
+            </div>
           </div>
+
           <h1 className="hero-title-main hero-title-centered">
             Verify Institutions on <span className="gradient-text">Cryptographic Evidence</span>, Not Assumptions.
           </h1>
+
           <p className="hero-desc hero-desc-centered">
-            A secure, air-gapped platform to examine submitted institutional documents, detect digital tampering, cross-validate claims with official regulatory registries, and record decisions with an immutable audit trail.
+            An air-gapped forensic platform engineered for regulatory officers to examine submitted institutional documents, detect digital tampering, cross-validate claims with official regulatory registries, and record decisions with an immutable audit trail.
           </p>
+
           <div className="hero-ctas hero-ctas-centered">
-            <Link className="btn-glass-primary" to="/login">
+            <Link className="btn-glass-primary hero-btn-large" to="/login">
               Access Officer Workspace <ArrowRight size={17} />
             </Link>
-            <a className="btn-glass-secondary" href="#inspector-console">
+            <a className="btn-glass-secondary hero-btn-large" href="#inspector-console">
               Explore Live Inspector
             </a>
-            <Link className="btn-glass-secondary" to="/signup">
+            <Link className="btn-glass-secondary hero-btn-large" to="/signup">
               Create Account
             </Link>
+          </div>
+
+          {/* Frosted Hero Assurance Strip */}
+          <div className="hero-assurance-strip">
+            <span><ShieldCheck size={14} style={{ color: "var(--brand-2)" }} /> Air-Gapped Local Model</span>
+            <span className="sep">•</span>
+            <span><FileText size={14} style={{ color: "var(--brand-2)" }} /> Sub-Second Spatial OCR</span>
+            <span className="sep">•</span>
+            <span><Fingerprint size={14} style={{ color: "var(--brand-2)" }} /> pyHanko Cryptographic Signature</span>
           </div>
         </div>
       </section>
