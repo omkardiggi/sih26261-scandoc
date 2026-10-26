@@ -40,7 +40,7 @@ export default function Dashboard() {
     <>
       <PageHead title="Dashboard" sub="Which institutions' documents are correct, which have problems, and what is waiting for your decision." />
       <div className="kpis">
-        <Stat label="Institutions" value={c.institutions} icon={Building2} color="linear-gradient(135deg,#0f766e,#14b8a6)" to="/app/institutions" />
+        <Stat label="Institutions" value={c.institutions} icon={Building2} color="linear-gradient(135deg,#11212D,#253745)" to="/app/institutions" />
         <Stat label="Documents correct" value={c.documents_correct} icon={CheckCircle2} color="linear-gradient(135deg,#047857,#10b981)" />
         <Stat label="Documents with problems" value={c.documents_problem} icon={XCircle} color="linear-gradient(135deg,#b91c1c,#f43f5e)" />
         <Stat label="Awaiting your decision" value={c.awaiting_decision} icon={Gavel} color="linear-gradient(135deg,#b45309,#f59e0b)" />
@@ -85,7 +85,7 @@ export default function Dashboard() {
               {!activity.data ? <Spinner /> : !activity.data.items.length ? <div className="muted small" style={{ padding: 12 }}>Nothing yet.</div> : (
                 <div className="stack sm">{activity.data.items.map((a: any) => (
                   <div key={a.id} className="act-row" onClick={() => a.link && nav(a.link)} title={a.title}>
-                    <span className="act-dot" style={{ background: a.type === "finding" ? "#ef4444" : a.type === "decision" ? "#10b981" : "#0d9488" }}>{a.type === "finding" ? <AlertTriangle size={13} /> : a.type === "decision" ? <Gavel size={13} /> : <Building2 size={13} />}</span>
+                    <span className="act-dot" style={{ background: a.type === "finding" ? "#ef4444" : a.type === "decision" ? "#10b981" : "#253745" }}>{a.type === "finding" ? <AlertTriangle size={13} /> : a.type === "decision" ? <Gavel size={13} /> : <Building2 size={13} />}</span>
                     <span className="act-text small"><strong>{a.title}</strong><span className="muted tiny">{a.institution_name || a.detail}</span></span>
                     <span className="act-meta">{a.type === "document" && <StatusBadge map={DOC_STATUS} value={a.status} />}<span className="muted tiny">{fmtDate(a.at)}</span></span>
                   </div>
