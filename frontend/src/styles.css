@@ -32,7 +32,7 @@
   --radius: 10px;
   --radius-sm: 7px;
   --sidebar-w: 248px;
-  font-family: "Inter Variable", "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-family: "Inter", "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   font-size: 14px;
   line-height: 1.5;
 }
@@ -71,7 +71,7 @@ html, body { margin: 0; background: var(--bg); color: var(--text); }
 body { -webkit-font-smoothing: antialiased; }
 a { color: var(--accent); text-decoration: none; }
 a:hover { text-decoration: underline; }
-h1, h2, h3, h4 { margin: 0; line-height: 1.25; letter-spacing: -0.01em; }
+h1, h2, h3, h4 { margin: 0; font-family: "Plus Jakarta Sans", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; line-height: 1.25; letter-spacing: -0.02em; }
 h1 { font-size: 22px; font-weight: 650; }
 h2 { font-size: 17px; font-weight: 620; }
 h3 { font-size: 14.5px; font-weight: 620; }
@@ -833,23 +833,28 @@ body { background: var(--bg) !important; }
 :root[data-theme="dark"] .hero-badge-pill .pulse-dot { background: #7DA0CA; box-shadow: 0 0 10px #7DA0CA; }
 
 .hero-title-main {
-  font-size: clamp(32px, 4.2vw, 54px);
-  letter-spacing: -0.03em;
-  line-height: 1.12;
-  font-weight: 750;
+  font-family: "Plus Jakarta Sans", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: clamp(32px, 3.6vw, 46px);
+  letter-spacing: -0.035em;
+  line-height: 1.16;
+  font-weight: 700;
   color: var(--text);
-  margin-bottom: 20px;
+  margin-bottom: 22px;
+  max-width: 660px;
+  text-wrap: balance;
 }
 .hero-title-main .gradient-text {
-  background: linear-gradient(135deg, #253745 0%, #5483B3 60%, #7DA0CA 100%);
+  background: linear-gradient(135deg, #11212D 0%, #253745 45%, #5483B3 100%);
   -webkit-background-clip: text;
   background-clip: text;
+  -webkit-text-fill-color: transparent;
   color: transparent;
 }
 :root[data-theme="dark"] .hero-title-main .gradient-text {
-  background: linear-gradient(135deg, #C1E8FF 0%, #7DA0CA 60%, #9BA8AB 100%);
+  background: linear-gradient(135deg, #FFFFFF 0%, #C1E8FF 45%, #7DA0CA 100%);
   -webkit-background-clip: text;
   background-clip: text;
+  -webkit-text-fill-color: transparent;
   color: transparent;
 }
 .hero-desc {
@@ -1012,15 +1017,6 @@ body { background: var(--bg) !important; }
   padding: 14px 18px 18px;
   position: relative;
   min-height: 240px;
-}
-.scanline-beam {
-  position: absolute;
-  left: 0; right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, #5483B3, #7DA0CA, transparent);
-  box-shadow: 0 0 12px #5483B3;
-  animation: scanBeam 3.6s ease-in-out infinite;
-  pointer-events: none;
 }
 .inspection-card {
   border-radius: 12px;

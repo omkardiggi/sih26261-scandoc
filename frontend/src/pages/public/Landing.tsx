@@ -248,8 +248,6 @@ export default function Landing() {
               </div>
 
               <div className="mockup-body">
-                <div className="scanline-beam" />
-
                 {activeTab === "extraction" && (
                   <div className="inspection-card anim-pop-in">
                     <div className="row between">
