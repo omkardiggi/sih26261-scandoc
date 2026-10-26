@@ -63,6 +63,9 @@ GOOD = {
     "outdoor": ["a clean campus outdoors"],
 }
 TEMPLATES = ["a photo of {}.", "{}"]
+# Single descriptions (no templates) for the fire-bucket check on each bucket crop; thresholds in photo_ai were set with these.
+BUCKET_CHECK = {"bucket": "a red metal bucket", "extinguisher": "a red fire extinguisher cylinder", "other": "a red box",
+                "empty": "an empty red bucket, nothing inside it", "full": "a red bucket filled with sand"}
 
 
 def main(text_model: str, tokenizer_json: str) -> None:
@@ -79,11 +82,16 @@ def main(text_model: str, tokenizer_json: str) -> None:
         m = np.mean(vecs, axis=0)
         return [round(float(x), 6) for x in m / np.linalg.norm(m)]
 
+    def embed_one(prompt: str) -> list[float]:
+        v = sess.run(None, {"input_ids": np.array([tok.encode(prompt).ids[:77]], dtype=np.int64)})[0][0]
+        return [round(float(x), 6) for x in v / np.linalg.norm(v)]
+
     out = {
         "model": "clip-vit-base-patch32 (quantized)",
         "classes": [{"name": k, "embedding": embed(v)} for k, v in CLASSES.items()],
         "defects": [{"name": k, "embedding": embed(v)} for k, v in DEFECTS.items()],
         "good": [embed(v) for v in GOOD.values()],
+        "bucket_check": {k: embed_one(v) for k, v in BUCKET_CHECK.items()},
     }
     path = Path(__file__).resolve().parent.parent / "data" / "models" / "clip_labels.json"
     path.write_text(json.dumps(out), encoding="utf-8")

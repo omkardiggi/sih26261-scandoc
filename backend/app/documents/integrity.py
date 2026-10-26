@@ -928,7 +928,8 @@ def _photo_note(f: dict) -> tuple[str, str | None, str]:
     detail = f"{r['class']} {round(r['score'] * 100)}%" + ("" if sure else f"; also possible: {r['top'][1][0]}")
     if r["defects"]:
         d = r["defects"][0]
-        return label, f"Possible defect: {d['name']} ({round(d['score'] * 100)}%), verify on site. {detail}", "photo_defect"
+        why = f" {d['reason']}" if d.get("reason") else ""
+        return label, f"Possible defect: {d['name']} ({round(d['score'] * 100)}%), verify on site.{why} {detail}", "photo_defect"
     return label, detail, "photo"
 
 
@@ -961,7 +962,8 @@ def check_ink_regions(ex: ExtractionResult) -> Check:
         summary += " Photographs: " + ", ".join(sorted({f["photo"]["class"] for f in photos})) + "."
         flagged = [f for f in photos if f["photo"]["defects"]]
         if flagged:
-            summary += f" {len(flagged)} photograph(s) show a possible defect to verify on site."
+            names = sorted({d["name"] for f in flagged for d in f["photo"]["defects"]})
+            summary += f" {len(flagged)} photograph(s) show a possible defect to verify on site: {', '.join(names)}."
     evidence = []
     for f in found[:60]:
         if f["kind"] == "photo":
@@ -969,6 +971,13 @@ def check_ink_regions(ex: ExtractionResult) -> Check:
         else:
             note, detail, kind = MARK_LABEL[f["kind"]] + (f" ({f['colour']} ink)" if f.get("colour") and f["colour"] != "dark" else ""), None, f["kind"]
         evidence.append({"type": "page", "page_no": f["page_no"], "bbox": f["bbox"], "kind": kind, "note": note} | ({"detail": detail} if detail else {}))
+        for d in (f.get("photo") or {}).get("defects", []):
+            px0, py0, px1, py1 = f["bbox"]  # defect boxes are relative to the photograph; place them on the page
+            for b in d.get("boxes", [])[:8]:
+                evidence.append({"type": "page", "page_no": f["page_no"], "kind": "photo_defect", "note": d["name"],
+                                 "detail": d.get("reason") or "Possible defect, verify on site",
+                                 "bbox": [round(px0 + b[0] * (px1 - px0), 4), round(py0 + b[1] * (py1 - py0), 4),
+                                          round(px0 + b[2] * (px1 - px0), 4), round(py0 + b[3] * (py1 - py0), 4)]})
     return Check("ink_regions", "visual_elements", "info", "Signatures, stamps and photographs", summary,
                  {"regions": found[:60], "counts": count}, evidence)
 
