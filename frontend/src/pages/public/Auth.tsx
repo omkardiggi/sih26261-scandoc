@@ -11,7 +11,7 @@ function Shell({ title, sub, children }: { title: string; sub?: string; children
       <div className="card auth-card stack lg">
         <div className="row between wrap">
           <Link to="/" className="row" style={{ color: "var(--text)", fontWeight: 650, textDecoration: "none" }}>
-            <span className="brand-mark"><ShieldCheck size={17} /></span> Institution Verification Platform
+            <span className="brand-mark"><ShieldCheck size={17} /></span> ScanDoc
           </Link>
           <ThemeToggle />
         </div>

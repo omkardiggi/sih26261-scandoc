@@ -79,7 +79,7 @@ export default function AppShell() {
       <aside className="sidebar" aria-label="Primary">
         <div className="brand">
           <span className="brand-mark"><ShieldCheck size={17} /></span>
-          <span className="brand-text">Institution<br />Verification</span>
+          <span className="brand-text">ScanDoc<br /><span className="brand-sub">Institution Verification</span></span>
         </div>
         <nav className="stack sm" style={{ gap: 2 }}>
           {NAV.map((n) => (

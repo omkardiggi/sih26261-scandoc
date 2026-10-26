@@ -7,7 +7,7 @@ export function PublicNav() {
     <header className="public-nav">
       <Link to="/" className="row" style={{ color: "var(--text)", fontWeight: 650, textDecoration: "none" }}>
         <span className="brand-mark"><ShieldCheck size={17} /></span>
-        Institution Verification Platform
+        ScanDoc
       </Link>
       <nav aria-label="Site">
         <a href="/#capabilities">Capabilities</a>
@@ -23,7 +23,7 @@ export function PublicFooter() {
   return (
     <footer className="footer">
       <div className="section-inner row between wrap">
-        <span>Institution Verification Platform · Access is restricted to authorized officers.</span>
+        <span>ScanDoc · AICTE institution verification · Access is restricted to authorized officers.</span>
         <span className="row wrap" style={{ gap: 18 }}>
           <Link to="/privacy">Privacy</Link>
           <Link to="/terms">Terms of use</Link>
